@@ -1,0 +1,42 @@
+# Jekyll 配置文件
+title: "我的 RSS 聚合站"
+description: "实时更新的新闻和文章聚合"
+author: "Patrick Fang"
+email: "your-email@example.com"
+
+# 网站设置
+url: "https://patfang0105.github.io"
+baseurl: "/my-rss-blog"
+
+# Jekyll 设置
+markdown: kramdown
+highlighter: rouge
+theme: minima
+
+# 插件
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# 导航
+navigation:
+  - title: "首页"
+    url: "/"
+  - title: "技术新闻"
+    url: "/tech/"
+  - title: "国际关系"
+    url: "/international/"
+  - title: "关于"
+    url: "/about/"
+
+# RSS 源配置
+rss_feeds:
+  - name: "Hacker News"
+    url: "https://patfang0105.github.io/my-rss-feeds/rss_news_ycombinator_com.xml"
+    category: "tech"
+  - name: "CSIS"
+    url: "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml"
+    category: "international"
+  - name: "CFR"
+    url: "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml"
+    category: "international"
