@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的 RSS 聚合站</title>
+    <script defer src="assets/app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .rss-link {
+            display: inline-block;
+            background: #007acc;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .rss-link:hover {
+            background: #005a9e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📰 我的 RSS 聚合站</h1>
+        <p>实时更新的新闻和文章聚合</p>
+    </div>
+    
+    <div class="content">
+        <h2>🧩 单页 RSS 聚合</h2>
+        <p>汇总多个 RSS 源为一页展示，支持自定义添加/删除订阅。</p>
+
+        <div id="controls">
+            <input id="newFeedUrl" type="url" placeholder="粘贴 RSS 链接，例如 https://.../rss.xml" style="width:100%;padding:10px;margin:10px 0;" />
+            <button id="addFeedBtn" class="rss-link">➕ 添加订阅源</button>
+            <button id="refreshBtn" class="rss-link">🔄 刷新</button>
+        </div>
+
+        <h3>📚 已订阅源</h3>
+        <ul id="feedList"></ul>
+
+        <h3>📰 最新内容</h3>
+        <div id="items"></div>
+    </div>
+</body>
+</html>
+
