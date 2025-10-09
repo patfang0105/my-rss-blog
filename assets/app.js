@@ -1,19 +1,12 @@
 // 简易前端聚合器：合并多个 RSS 源并展示（本地浏览器运行）
-// 说明：浏览器直接抓取跨域 RSS 需要 CORS 代理，这里默认用 jsDelivr+rss2json 免费方案
+// 说明：浏览器直接抓取跨域 RSS 需要 CORS 代理，这里默认用 rss2json 免费方案
 
 const DEFAULT_FEEDS = [
-  "https://www.atlanticcouncil.org/feed/",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
-  "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml"
-  "https://www.brookings.edu/feed/"
-  "https://www.piie.com/rss/update.xml"
-  "https://rmi.org/feed/"
-  "https://www.wto.org/library/rss/latest_news_e.xml"
-  "https://www.foreignaffairs.com/rss.xml"
-  "https://www.imf.org/en/publications/rss?language=eng"
-  "https://rhg.com/feed/”
+  "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
+  "https://www.atlanticcouncil.org/feed/",
+  "https://www.imf.org/en/publications/rss?language=eng",
   "http://project-syndicate.org/rss"
-  "https://www.imf.org/en/publications/rss?language=eng&series=IMF%20Working%20Papers"
 ];
 
 const state = {
@@ -42,6 +35,8 @@ function saveFeeds() {
 
 function renderFeeds() {
   const ul = document.getElementById('feedList');
+  if (!ul) return;
+  
   ul.innerHTML = '';
   state.feeds.forEach((url, idx) => {
     const li = document.createElement('li');
@@ -65,30 +60,40 @@ function renderFeeds() {
 }
 
 async function fetchFeed(url) {
-  // 使用 rss2json 公开服务（基于 feed2json/Feedflare 类似服务）。若不可用，可换成你自己的代理。
-  // 方案A：jsDelivr + rss2json 代理
-  const api = `https://r.jina.ai/http://r.jina.ai/http://r.jina.ai/http://r.jina.ai/`;
-  // 上面只是占位，真实可用且更稳定的免费方案：Jina AI Reader（将任意URL转为正文JSON），但不直接输出RSS结构。
-  // 因免费CORS代理可能不稳定，这里改用另外一个简单方案：
-  // 使用 https://api.rss2json.com/v1/api.json?rss_url=...
-  const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
-
-  const res = await fetch(endpoint);
-  if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
-  const data = await res.json();
-  if (!data || !data.items) return [];
-  return data.items.map(it => ({
-    title: it.title,
-    link: it.link,
-    author: it.author || (it.author && it.author.name) || '',
-    pubDate: it.pubDate || it.pubdate || it.date || '',
-    description: it.description || '',
-    source: data.feed && data.feed.title ? data.feed.title : url,
-  }));
+  try {
+    // 使用 rss2json 公开服务转换 RSS
+    const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+    
+    const res = await fetch(endpoint);
+    if (!res.ok) {
+      console.warn(`获取 ${url} 失败: ${res.status}`);
+      return [];
+    }
+    
+    const data = await res.json();
+    if (!data || !data.items) {
+      console.warn(`${url} 返回数据格式不正确`);
+      return [];
+    }
+    
+    return data.items.map(it => ({
+      title: it.title || '无标题',
+      link: it.link || '#',
+      author: it.author || '',
+      pubDate: it.pubDate || it.pubdate || it.date || '',
+      description: it.description || '',
+      source: data.feed && data.feed.title ? data.feed.title : url,
+    }));
+  } catch (e) {
+    console.error(`抓取 ${url} 时出错:`, e);
+    return [];
+  }
 }
 
 function renderItems() {
   const container = document.getElementById('items');
+  if (!container) return;
+  
   container.innerHTML = '';
 
   if (state.isLoading) {
@@ -121,16 +126,32 @@ function renderItems() {
     const meta = document.createElement('div');
     meta.style.color = '#666';
     meta.style.fontSize = '12px';
-    meta.textContent = `${item.source || ''}${item.author ? ' · ' + item.author : ''}${item.pubDate ? ' · ' + new Date(item.pubDate).toLocaleString() : ''}`;
+    let metaText = item.source || '';
+    if (item.author) metaText += ' · ' + item.author;
+    if (item.pubDate) {
+      try {
+        metaText += ' · ' + new Date(item.pubDate).toLocaleString('zh-CN');
+      } catch {
+        metaText += ' · ' + item.pubDate;
+      }
+    }
+    meta.textContent = metaText;
 
     const desc = document.createElement('div');
     desc.style.marginTop = '6px';
     desc.style.color = '#555';
-    desc.innerHTML = (item.description || '').slice(0, 240);
+    desc.style.fontSize = '14px';
+    // 移除 HTML 标签，只保留纯文本
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = item.description || '';
+    const plainText = tempDiv.textContent || tempDiv.innerText || '';
+    desc.textContent = plainText.slice(0, 200) + (plainText.length > 200 ? '...' : '');
 
     card.appendChild(title);
     card.appendChild(meta);
-    card.appendChild(desc);
+    if (desc.textContent) {
+      card.appendChild(desc);
+    }
     list.appendChild(card);
   });
 
@@ -140,16 +161,32 @@ function renderItems() {
 async function refresh() {
   state.isLoading = true;
   renderItems();
+  
   try {
+    console.log('开始刷新 RSS 源...');
     const all = await Promise.allSettled(state.feeds.map(fetchFeed));
     const merged = [];
+    
     for (const r of all) {
-      if (r.status === 'fulfilled') merged.push(...r.value);
+      if (r.status === 'fulfilled') {
+        merged.push(...r.value);
+      } else {
+        console.warn('某个订阅源抓取失败:', r.reason);
+      }
     }
-    merged.sort((a, b) => new Date(b.pubDate || 0) - new Date(a.pubDate || 0));
+    
+    // 按时间排序
+    merged.sort((a, b) => {
+      const dateA = new Date(a.pubDate || 0);
+      const dateB = new Date(b.pubDate || 0);
+      return dateB - dateA;
+    });
+    
     state.items = merged;
+    console.log(`成功加载 ${merged.length} 篇文章`);
   } catch (e) {
-    console.error(e);
+    console.error('刷新时出错:', e);
+    alert('刷新失败，请查看浏览器控制台了解详情');
   } finally {
     state.isLoading = false;
     renderItems();
@@ -161,30 +198,50 @@ function bindUI() {
   const refreshBtn = document.getElementById('refreshBtn');
   const input = document.getElementById('newFeedUrl');
 
+  if (!addBtn || !refreshBtn || !input) {
+    console.error('找不到必要的 UI 元素');
+    return;
+  }
+
   addBtn.addEventListener('click', () => {
     const url = input.value.trim();
-    if (!url) return;
+    if (!url) {
+      alert('请输入 RSS 链接');
+      return;
+    }
     if (!/^https?:\/\//.test(url)) {
       alert('请输入有效的 http(s) 链接');
       return;
     }
-    if (!state.feeds.includes(url)) {
-      state.feeds.push(url);
-      saveFeeds();
-      renderFeeds();
-      refresh();
+    if (state.feeds.includes(url)) {
+      alert('该订阅源已存在');
+      return;
     }
+    
+    state.feeds.push(url);
+    saveFeeds();
+    renderFeeds();
+    refresh();
     input.value = '';
   });
 
-  refreshBtn.addEventListener('click', refresh);
+  refreshBtn.addEventListener('click', () => {
+    refresh();
+  });
+  
+  // 支持回车添加
+  input.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      addBtn.click();
+    }
+  });
 }
 
+// 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('RSS 聚合器初始化中...');
   loadFeedsFromStorage();
   renderFeeds();
   bindUI();
   refresh();
 });
-
-
