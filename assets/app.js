@@ -7,7 +7,8 @@ const DEFAULT_FEEDS = [
   "https://www.atlanticcouncil.org/feed/",
   "https://www.imf.org/en/publications/rss?language=eng",
   "http://project-syndicate.org/rss",
-  "https://rhg.com/feed/"
+  "https://rhg.com/feed/",
+  "https://www.aei.org/comments/feed/"
 ];
 
 const state = {
