@@ -14,7 +14,6 @@ const DEFAULT_FEEDS = [
   "https://rhg.com/feed/”
   "http://project-syndicate.org/rss"
   "https://www.imf.org/en/publications/rss?language=eng&series=IMF%20Working%20Papers"
-  
 ];
 
 const state = {
