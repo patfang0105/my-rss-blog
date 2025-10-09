@@ -2,9 +2,19 @@
 // 说明：浏览器直接抓取跨域 RSS 需要 CORS 代理，这里默认用 jsDelivr+rss2json 免费方案
 
 const DEFAULT_FEEDS = [
-  "https://patfang0105.github.io/my-rss-feeds/rss_news_ycombinator_com.xml",
+  "https://www.atlanticcouncil.org/feed/",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml"
+  "https://www.brookings.edu/feed/"
+  "https://www.piie.com/rss/update.xml"
+  "https://rmi.org/feed/"
+  "https://www.wto.org/library/rss/latest_news_e.xml"
+  "https://www.foreignaffairs.com/rss.xml"
+  "https://www.imf.org/en/publications/rss?language=eng"
+  "https://rhg.com/feed/”
+  "http://project-syndicate.org/rss"
+  "https://www.imf.org/en/publications/rss?language=eng&series=IMF%20Working%20Papers"
+  
 ];
 
 const state = {
