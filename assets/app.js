@@ -6,7 +6,8 @@ const DEFAULT_FEEDS = [
   "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
   "https://www.atlanticcouncil.org/feed/",
   "https://www.imf.org/en/publications/rss?language=eng",
-  "http://project-syndicate.org/rss"
+  "http://project-syndicate.org/rss",
+  "https://rhg.com/feed/"
 ];
 
 const state = {
