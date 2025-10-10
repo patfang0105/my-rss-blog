@@ -9,7 +9,8 @@ const DEFAULT_FEEDS = [
   "http://project-syndicate.org/rss",
   "https://rhg.com/feed/",
   "https://www.aei.org/feed/",
-  "https://www.wto.org/library/rss/latest_news_e.xml"
+  "https://www.wto.org/library/rss/latest_news_e.xml",
+  "https://www.foreignaffairs.com/rss.xml"
 ];
 
 const state = {
