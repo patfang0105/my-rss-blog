@@ -10,7 +10,8 @@ const DEFAULT_FEEDS = [
   "https://rhg.com/feed/",
   "https://www.aei.org/feed/",
   "https://www.wto.org/library/rss/latest_news_e.xml",
-  "https://www.foreignaffairs.com/rss.xml"
+  "https://www.foreignaffairs.com/rss.xml",
+  "https://www.piie.com/rss/update.xml"
 ];
 
 const state = {
