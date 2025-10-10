@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>晓元的 RSS 聚合站</title>
+    <title>我的 RSS 聚合站</title>
     <script defer src="assets/app.js"></script>
     <style>
         body {
@@ -43,21 +43,16 @@
 </head>
 <body>
     <div class="header">
-        <h1>📰 欢迎来到我的 RSS 聚合站</h1>
+        <h1>📰 我的 RSS 聚合站</h1>
         <p>实时更新的新闻和文章聚合</p>
     </div>
     
     <div class="content">
         <h2>🧩 单页 RSS 聚合</h2>
-        <p>汇总多个 RSS 源为一页展示，支持自定义添加/删除订阅。</p>
-        <p style="color: #0066cc; font-size: 14px;">
-            🌐 <strong>智能代理</strong>：自动使用多个备用代理服务，即使在网络受限环境也能正常访问！
-        </p>
+        <p>汇总多个精选 RSS 源为一页展示，自动更新最新内容。</p>
 
-        <div id="controls">
-            <input id="newFeedUrl" type="url" placeholder="粘贴 RSS 链接，例如 https://.../rss.xml" style="width:100%;padding:10px;margin:10px 0;" />
-            <button id="addFeedBtn" class="rss-link">➕ 添加订阅源</button>
-            <button id="refreshBtn" class="rss-link">🔄 刷新</button>
+        <div id="controls" style="text-align: center;">
+            <button id="refreshBtn" class="rss-link">🔄 刷新内容</button>
         </div>
 
         <div id="timeFilter" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
@@ -80,9 +75,6 @@
             </label>
             <span id="filterStats" style="margin-left: 20px; color: #666; font-size: 14px;"></span>
         </div>
-
-        <h3>📚 已订阅源</h3>
-        <ul id="feedList"></ul>
 
         <h3>📰 最新内容</h3>
         <div id="items"></div>
