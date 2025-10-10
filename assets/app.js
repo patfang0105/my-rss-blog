@@ -1,7 +1,7 @@
 // 简易前端聚合器：合并多个 RSS 源并展示（本地浏览器运行）
-// 说明：浏览器直接抓取跨域 RSS 需要 CORS 代理，这里默认用 rss2json 免费方案
+// 使用增强型多代理系统，提高网络访问成功率
 
-const DEFAULT_FEEDS = [
+const FEEDS = [
   "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
   "https://www.atlanticcouncil.org/feed/",
@@ -17,59 +17,14 @@ const DEFAULT_FEEDS = [
 ];
 
 const state = {
-  feeds: [],
   items: [],
   allItems: [], // 存储所有未过滤的文章
   isLoading: false,
   timeFilter: 'all', // 当前选择的时间筛选
 };
 
-function loadFeedsFromStorage() {
-  const saved = localStorage.getItem('feeds');
-  if (saved) {
-    try {
-      state.feeds = JSON.parse(saved);
-      if (!Array.isArray(state.feeds)) throw new Error('invalid');
-    } catch {
-      state.feeds = [...DEFAULT_FEEDS];
-    }
-  } else {
-    state.feeds = [...DEFAULT_FEEDS];
-  }
-}
-
-function saveFeeds() {
-  localStorage.setItem('feeds', JSON.stringify(state.feeds));
-}
-
-function renderFeeds() {
-  const ul = document.getElementById('feedList');
-  if (!ul) return;
-  
-  ul.innerHTML = '';
-  state.feeds.forEach((url, idx) => {
-    const li = document.createElement('li');
-    li.style.margin = '6px 0';
-    li.innerHTML = `
-      <code style="word-break:break-all">${url}</code>
-      <button data-idx="${idx}" class="removeBtn" style="margin-left:10px">🗑️ 移除</button>
-    `;
-    ul.appendChild(li);
-  });
-
-  ul.querySelectorAll('.removeBtn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = Number(btn.getAttribute('data-idx'));
-      state.feeds.splice(i, 1);
-      saveFeeds();
-      renderFeeds();
-      refresh();
-    });
-  });
-}
-
 async function fetchFeed(url) {
-  // 多个备用代理服务，按优先级尝试
+  // 增强型多代理服务列表 - 提供更多备用方案以提高成功率
   const PROXY_SERVICES = [
     {
       name: 'rss2json',
@@ -91,6 +46,16 @@ async function fetchFeed(url) {
     {
       name: 'corsproxy',
       endpoint: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      parser: (text) => parseRSSText(text, url)
+    },
+    {
+      name: 'thingproxy',
+      endpoint: (url) => `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(url)}`,
+      parser: (text) => parseRSSText(text, url)
+    },
+    {
+      name: 'cors-anywhere',
+      endpoint: (url) => `https://cors-anywhere.herokuapp.com/${url}`,
       parser: (text) => parseRSSText(text, url)
     }
   ];
@@ -298,7 +263,7 @@ async function refresh() {
   
   try {
     console.log('开始刷新 RSS 源...');
-    const all = await Promise.allSettled(state.feeds.map(fetchFeed));
+    const all = await Promise.allSettled(FEEDS.map(fetchFeed));
     const merged = [];
     
     for (const r of all) {
@@ -329,46 +294,15 @@ async function refresh() {
 }
 
 function bindUI() {
-  const addBtn = document.getElementById('addFeedBtn');
   const refreshBtn = document.getElementById('refreshBtn');
-  const input = document.getElementById('newFeedUrl');
 
-  if (!addBtn || !refreshBtn || !input) {
-    console.error('找不到必要的 UI 元素');
+  if (!refreshBtn) {
+    console.error('找不到刷新按钮');
     return;
   }
 
-  addBtn.addEventListener('click', () => {
-    const url = input.value.trim();
-    if (!url) {
-      alert('请输入 RSS 链接');
-      return;
-    }
-    if (!/^https?:\/\//.test(url)) {
-      alert('请输入有效的 http(s) 链接');
-      return;
-    }
-    if (state.feeds.includes(url)) {
-      alert('该订阅源已存在');
-      return;
-    }
-    
-    state.feeds.push(url);
-    saveFeeds();
-    renderFeeds();
-    refresh();
-    input.value = '';
-  });
-
   refreshBtn.addEventListener('click', () => {
     refresh();
-  });
-  
-  // 支持回车添加
-  input.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      addBtn.click();
-    }
   });
   
   // 绑定时间筛选单选按钮
@@ -386,8 +320,6 @@ function bindUI() {
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
   console.log('RSS 聚合器初始化中...');
-  loadFeedsFromStorage();
-  renderFeeds();
   bindUI();
   refresh();
 });
