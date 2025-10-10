@@ -12,7 +12,8 @@ const DEFAULT_FEEDS = [
   "https://www.wto.org/library/rss/latest_news_e.xml",
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
-  "https://amro-asia.org/feed/"
+  "https://amro-asia.org/feed/",
+  "https://politepol.com/fd/X589A2bsRjn8.xml"
 ];
 
 const state = {
