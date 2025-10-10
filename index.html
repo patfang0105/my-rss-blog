@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的 RSS 聚合站</title>
+    <title>晓元的 RSS 聚合站</title>
     <script defer src="assets/app.js"></script>
     <style>
         body {
@@ -43,7 +43,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>📰 我的 RSS 聚合站</h1>
+        <h1>📰 欢迎来到我的 RSS 聚合站</h1>
         <p>实时更新的新闻和文章聚合</p>
     </div>
     
@@ -58,6 +58,27 @@
             <input id="newFeedUrl" type="url" placeholder="粘贴 RSS 链接，例如 https://.../rss.xml" style="width:100%;padding:10px;margin:10px 0;" />
             <button id="addFeedBtn" class="rss-link">➕ 添加订阅源</button>
             <button id="refreshBtn" class="rss-link">🔄 刷新</button>
+        </div>
+
+        <div id="timeFilter" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <label style="font-weight: bold; color: #333; margin-right: 10px;">⏰ 时间筛选：</label>
+            <label style="margin-right: 15px; cursor: pointer;">
+                <input type="radio" name="timeRange" value="all" checked style="margin-right: 5px;">
+                全部
+            </label>
+            <label style="margin-right: 15px; cursor: pointer;">
+                <input type="radio" name="timeRange" value="24h" style="margin-right: 5px;">
+                24小时内
+            </label>
+            <label style="margin-right: 15px; cursor: pointer;">
+                <input type="radio" name="timeRange" value="week" style="margin-right: 5px;">
+                1周内
+            </label>
+            <label style="margin-right: 15px; cursor: pointer;">
+                <input type="radio" name="timeRange" value="month" style="margin-right: 5px;">
+                1个月内
+            </label>
+            <span id="filterStats" style="margin-left: 20px; color: #666; font-size: 14px;"></span>
         </div>
 
         <h3>📚 已订阅源</h3>
