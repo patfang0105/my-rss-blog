@@ -65,32 +65,114 @@ function renderFeeds() {
 }
 
 async function fetchFeed(url) {
+  // 多个备用代理服务，按优先级尝试
+  const PROXY_SERVICES = [
+    {
+      name: 'rss2json',
+      endpoint: (url) => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
+      parser: (data) => data.items.map(it => ({
+        title: it.title || '无标题',
+        link: it.link || '#',
+        author: it.author || '',
+        pubDate: it.pubDate || it.pubdate || it.date || '',
+        description: it.description || '',
+        source: data.feed && data.feed.title ? data.feed.title : url,
+      }))
+    },
+    {
+      name: 'allorigins',
+      endpoint: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      parser: (text) => parseRSSText(text, url)
+    },
+    {
+      name: 'corsproxy',
+      endpoint: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      parser: (text) => parseRSSText(text, url)
+    }
+  ];
+
+  // 尝试每个代理服务
+  for (const proxy of PROXY_SERVICES) {
+    try {
+      const endpoint = proxy.endpoint(url);
+      const res = await fetch(endpoint, { timeout: 10000 });
+      
+      if (!res.ok) {
+        console.warn(`${proxy.name} 获取 ${url} 失败: ${res.status}`);
+        continue; // 尝试下一个代理
+      }
+      
+      const contentType = res.headers.get('content-type') || '';
+      let data;
+      
+      if (contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        data = await res.text();
+      }
+      
+      if (!data) {
+        console.warn(`${proxy.name} 返回空数据`);
+        continue;
+      }
+      
+      const items = proxy.parser(data);
+      if (items && items.length > 0) {
+        console.log(`✓ 使用 ${proxy.name} 成功获取 ${url}`);
+        return items;
+      }
+      
+    } catch (e) {
+      console.warn(`${proxy.name} 代理失败:`, e.message);
+      continue; // 尝试下一个代理
+    }
+  }
+  
+  console.error(`所有代理都失败，无法获取 ${url}`);
+  return [];
+}
+
+// 简单的 RSS XML 解析器（用于备用代理）
+function parseRSSText(xmlText, sourceUrl) {
   try {
-    // 使用 rss2json 公开服务转换 RSS
-    const endpoint = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
     
-    const res = await fetch(endpoint);
-    if (!res.ok) {
-      console.warn(`获取 ${url} 失败: ${res.status}`);
+    // 检查是否有解析错误
+    const parserError = xmlDoc.querySelector('parsererror');
+    if (parserError) {
+      console.warn('XML 解析错误:', parserError.textContent);
       return [];
     }
     
-    const data = await res.json();
-    if (!data || !data.items) {
-      console.warn(`${url} 返回数据格式不正确`);
-      return [];
-    }
+    const items = [];
+    const channel = xmlDoc.querySelector('channel');
+    const feedTitle = channel?.querySelector('title')?.textContent || sourceUrl;
     
-    return data.items.map(it => ({
-      title: it.title || '无标题',
-      link: it.link || '#',
-      author: it.author || '',
-      pubDate: it.pubDate || it.pubdate || it.date || '',
-      description: it.description || '',
-      source: data.feed && data.feed.title ? data.feed.title : url,
-    }));
+    // 支持 RSS 2.0 和 Atom
+    const entries = xmlDoc.querySelectorAll('item, entry');
+    
+    entries.forEach(entry => {
+      const title = entry.querySelector('title')?.textContent || '无标题';
+      const link = entry.querySelector('link')?.textContent || 
+                   entry.querySelector('link')?.getAttribute('href') || '#';
+      const author = entry.querySelector('author, creator, dc\\:creator')?.textContent || '';
+      const pubDate = entry.querySelector('pubDate, published, updated')?.textContent || '';
+      const description = entry.querySelector('description, summary, content')?.textContent || '';
+      
+      items.push({
+        title: title.trim(),
+        link: link.trim(),
+        author: author.trim(),
+        pubDate: pubDate.trim(),
+        description: description.trim(),
+        source: feedTitle
+      });
+    });
+    
+    return items;
   } catch (e) {
-    console.error(`抓取 ${url} 时出错:`, e);
+    console.error('解析 RSS 文本失败:', e);
     return [];
   }
 }
