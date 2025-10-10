@@ -17,7 +17,9 @@ const DEFAULT_FEEDS = [
 const state = {
   feeds: [],
   items: [],
+  allItems: [], // 存储所有未过滤的文章
   isLoading: false,
+  timeFilter: 'all', // 当前选择的时间筛选
 };
 
 function loadFeedsFromStorage() {
@@ -177,6 +179,45 @@ function parseRSSText(xmlText, sourceUrl) {
   }
 }
 
+// 根据时间筛选过滤文章
+function filterItemsByTime() {
+  const now = Date.now();
+  const hour24 = 24 * 60 * 60 * 1000;
+  const week = 7 * hour24;
+  const month = 30 * hour24;
+
+  let filtered = state.allItems;
+  
+  if (state.timeFilter === '24h') {
+    filtered = state.allItems.filter(item => {
+      const itemDate = new Date(item.pubDate || 0).getTime();
+      return now - itemDate <= hour24;
+    });
+  } else if (state.timeFilter === 'week') {
+    filtered = state.allItems.filter(item => {
+      const itemDate = new Date(item.pubDate || 0).getTime();
+      return now - itemDate <= week;
+    });
+  } else if (state.timeFilter === 'month') {
+    filtered = state.allItems.filter(item => {
+      const itemDate = new Date(item.pubDate || 0).getTime();
+      return now - itemDate <= month;
+    });
+  }
+  
+  state.items = filtered;
+  
+  // 更新统计信息
+  const statsEl = document.getElementById('filterStats');
+  if (statsEl) {
+    if (state.timeFilter === 'all') {
+      statsEl.textContent = `共 ${filtered.length} 篇文章`;
+    } else {
+      statsEl.textContent = `筛选后: ${filtered.length} 篇 / 总计: ${state.allItems.length} 篇`;
+    }
+  }
+}
+
 function renderItems() {
   const container = document.getElementById('items');
   if (!container) return;
@@ -189,7 +230,11 @@ function renderItems() {
   }
 
   if (state.items.length === 0) {
-    container.innerHTML = '<p>暂无内容，请添加订阅源或点击刷新。</p>';
+    if (state.allItems.length > 0) {
+      container.innerHTML = '<p>当前时间范围内没有文章，请选择其他时间范围。</p>';
+    } else {
+      container.innerHTML = '<p>暂无内容，请添加订阅源或点击刷新。</p>';
+    }
     return;
   }
 
@@ -269,7 +314,8 @@ async function refresh() {
       return dateB - dateA;
     });
     
-    state.items = merged;
+    state.allItems = merged; // 保存所有文章
+    filterItemsByTime(); // 应用时间筛选
     console.log(`成功加载 ${merged.length} 篇文章`);
   } catch (e) {
     console.error('刷新时出错:', e);
@@ -321,6 +367,17 @@ function bindUI() {
     if (e.key === 'Enter') {
       addBtn.click();
     }
+  });
+  
+  // 绑定时间筛选单选按钮
+  const timeRadios = document.querySelectorAll('input[name="timeRange"]');
+  timeRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      state.timeFilter = e.target.value;
+      filterItemsByTime();
+      renderItems();
+      console.log(`时间筛选已更改为: ${state.timeFilter}`);
+    });
   });
 }
 
