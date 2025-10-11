@@ -272,27 +272,58 @@ function renderItems() {
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
     desc.textContent = plainText.slice(0, 200) + (plainText.length > 200 ? '...' : '');
 
-    // 添加代理访问按钮
-    const proxyBtn = document.createElement('a');
-    proxyBtn.href = `https://www.bing.com/translator?ref=TThis&text=&from=en&to=zh-Hans&a=${encodeURIComponent(item.link)}`;
-    proxyBtn.target = '_blank';
-    proxyBtn.textContent = '🌐 通过 Bing 代理阅读';
-    proxyBtn.style.display = 'inline-block';
-    proxyBtn.style.marginTop = '8px';
-    proxyBtn.style.padding = '4px 12px';
-    proxyBtn.style.background = '#e3f2fd';
-    proxyBtn.style.color = '#1976d2';
-    proxyBtn.style.textDecoration = 'none';
-    proxyBtn.style.borderRadius = '4px';
-    proxyBtn.style.fontSize = '12px';
-    proxyBtn.title = '使用必应翻译代理访问（国内可用，无需 VPN）';
+    // 添加代理访问按钮 - 使用多个备用代理
+    const proxyContainer = document.createElement('div');
+    proxyContainer.style.marginTop = '8px';
+    proxyContainer.style.display = 'flex';
+    proxyContainer.style.gap = '8px';
+    proxyContainer.style.flexWrap = 'wrap';
+    
+    // 代理1: Archive.today
+    const proxyBtn1 = document.createElement('a');
+    proxyBtn1.href = `https://archive.today/?run=1&url=${encodeURIComponent(item.link)}`;
+    proxyBtn1.target = '_blank';
+    proxyBtn1.textContent = '🌐 代理1';
+    proxyBtn1.style.display = 'inline-block';
+    proxyBtn1.style.padding = '4px 12px';
+    proxyBtn1.style.background = '#e3f2fd';
+    proxyBtn1.style.color = '#1976d2';
+    proxyBtn1.style.textDecoration = 'none';
+    proxyBtn1.style.borderRadius = '4px';
+    proxyBtn1.style.fontSize = '12px';
+    proxyBtn1.title = '使用 Archive.today 代理访问';
+    
+    // 代理2: Web Archive
+    const proxyBtn2 = document.createElement('a');
+    proxyBtn2.href = `https://web.archive.org/web/${item.link}`;
+    proxyBtn2.target = '_blank';
+    proxyBtn2.textContent = '🌐 代理2';
+    proxyBtn2.style.display = 'inline-block';
+    proxyBtn2.style.padding = '4px 12px';
+    proxyBtn2.style.background = '#fff3e0';
+    proxyBtn2.style.color = '#e65100';
+    proxyBtn2.style.textDecoration = 'none';
+    proxyBtn2.style.borderRadius = '4px';
+    proxyBtn2.style.fontSize = '12px';
+    proxyBtn2.title = '使用互联网档案馆代理访问';
+    
+    // 原文链接提示
+    const directHint = document.createElement('span');
+    directHint.textContent = '（标题可直接访问原文）';
+    directHint.style.fontSize = '11px';
+    directHint.style.color = '#999';
+    directHint.style.marginLeft = '5px';
+    
+    proxyContainer.appendChild(proxyBtn1);
+    proxyContainer.appendChild(proxyBtn2);
+    proxyContainer.appendChild(directHint);
 
     card.appendChild(title);
     card.appendChild(meta);
     if (desc.textContent) {
       card.appendChild(desc);
     }
-    card.appendChild(proxyBtn);
+    card.appendChild(proxyContainer);
     list.appendChild(card);
   });
 
