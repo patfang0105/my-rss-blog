@@ -272,51 +272,76 @@ function renderItems() {
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
     desc.textContent = plainText.slice(0, 200) + (plainText.length > 200 ? '...' : '');
 
-    // 添加代理访问按钮 - 使用多个备用代理
+    // 添加阅读按钮
     const proxyContainer = document.createElement('div');
     proxyContainer.style.marginTop = '8px';
     proxyContainer.style.display = 'flex';
     proxyContainer.style.gap = '8px';
     proxyContainer.style.flexWrap = 'wrap';
+    proxyContainer.style.alignItems = 'center';
     
-    // 代理1: Archive.today
-    const proxyBtn1 = document.createElement('a');
-    proxyBtn1.href = `https://archive.today/?run=1&url=${encodeURIComponent(item.link)}`;
-    proxyBtn1.target = '_blank';
-    proxyBtn1.textContent = '🌐 代理1';
-    proxyBtn1.style.display = 'inline-block';
-    proxyBtn1.style.padding = '4px 12px';
-    proxyBtn1.style.background = '#e3f2fd';
-    proxyBtn1.style.color = '#1976d2';
-    proxyBtn1.style.textDecoration = 'none';
-    proxyBtn1.style.borderRadius = '4px';
-    proxyBtn1.style.fontSize = '12px';
-    proxyBtn1.title = '使用 Archive.today 代理访问';
+    // 展开全文按钮
+    const expandBtn = document.createElement('button');
+    expandBtn.textContent = '📖 展开全文';
+    expandBtn.style.padding = '4px 12px';
+    expandBtn.style.background = '#4caf50';
+    expandBtn.style.color = 'white';
+    expandBtn.style.border = 'none';
+    expandBtn.style.borderRadius = '4px';
+    expandBtn.style.fontSize = '12px';
+    expandBtn.style.cursor = 'pointer';
+    expandBtn.title = '展开查看完整文章内容';
     
-    // 代理2: Web Archive
-    const proxyBtn2 = document.createElement('a');
-    proxyBtn2.href = `https://web.archive.org/web/${item.link}`;
-    proxyBtn2.target = '_blank';
-    proxyBtn2.textContent = '🌐 代理2';
-    proxyBtn2.style.display = 'inline-block';
-    proxyBtn2.style.padding = '4px 12px';
-    proxyBtn2.style.background = '#fff3e0';
-    proxyBtn2.style.color = '#e65100';
-    proxyBtn2.style.textDecoration = 'none';
-    proxyBtn2.style.borderRadius = '4px';
-    proxyBtn2.style.fontSize = '12px';
-    proxyBtn2.title = '使用互联网档案馆代理访问';
+    // 全文容器（默认隐藏）
+    const fullContent = document.createElement('div');
+    fullContent.style.display = 'none';
+    fullContent.style.marginTop = '10px';
+    fullContent.style.padding = '15px';
+    fullContent.style.background = '#f9f9f9';
+    fullContent.style.borderRadius = '5px';
+    fullContent.style.maxHeight = '400px';
+    fullContent.style.overflowY = 'auto';
+    fullContent.style.fontSize = '14px';
+    fullContent.style.lineHeight = '1.6';
+    fullContent.innerHTML = item.description || '<p>暂无详细内容</p>';
     
-    // 原文链接提示
-    const directHint = document.createElement('span');
-    directHint.textContent = '（标题可直接访问原文）';
-    directHint.style.fontSize = '11px';
-    directHint.style.color = '#999';
-    directHint.style.marginLeft = '5px';
+    // 点击展开/收起
+    expandBtn.addEventListener('click', () => {
+      if (fullContent.style.display === 'none') {
+        fullContent.style.display = 'block';
+        expandBtn.textContent = '📕 收起全文';
+        expandBtn.style.background = '#ff9800';
+      } else {
+        fullContent.style.display = 'none';
+        expandBtn.textContent = '📖 展开全文';
+        expandBtn.style.background = '#4caf50';
+      }
+    });
     
-    proxyContainer.appendChild(proxyBtn1);
-    proxyContainer.appendChild(proxyBtn2);
-    proxyContainer.appendChild(directHint);
+    // 访问原文链接
+    const originalBtn = document.createElement('a');
+    originalBtn.href = item.link;
+    originalBtn.target = '_blank';
+    originalBtn.textContent = '🔗 访问原文';
+    originalBtn.style.display = 'inline-block';
+    originalBtn.style.padding = '4px 12px';
+    originalBtn.style.background = '#2196f3';
+    originalBtn.style.color = 'white';
+    originalBtn.style.textDecoration = 'none';
+    originalBtn.style.borderRadius = '4px';
+    originalBtn.style.fontSize = '12px';
+    originalBtn.title = '访问原网站（可能需要 VPN）';
+    
+    // 提示文字
+    const hint = document.createElement('span');
+    hint.textContent = '（无需 VPN）';
+    hint.style.fontSize = '11px';
+    hint.style.color = '#4caf50';
+    hint.style.fontWeight = 'bold';
+    
+    proxyContainer.appendChild(expandBtn);
+    proxyContainer.appendChild(hint);
+    proxyContainer.appendChild(originalBtn);
 
     card.appendChild(title);
     card.appendChild(meta);
@@ -324,6 +349,7 @@ function renderItems() {
       card.appendChild(desc);
     }
     card.appendChild(proxyContainer);
+    card.appendChild(fullContent);
     list.appendChild(card);
   });
 
