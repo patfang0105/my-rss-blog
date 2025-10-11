@@ -5,10 +5,10 @@ const FEEDS = [
   "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
   "https://www.atlanticcouncil.org/feed/",
-  "https://www.imf.org/en/publications/rss?language=eng",
+  // "https://www.imf.org/en/publications/rss?language=eng",  // ❌ 缓存失败：超时
   "http://project-syndicate.org/rss",
-  "https://rhg.com/feed/",
-  "https://www.aei.org/feed/",
+  // "https://rhg.com/feed/",  // ❌ 缓存失败：403 Forbidden
+  // "https://www.aei.org/feed/",  // ❌ 缓存失败：403 Forbidden
   "https://www.wto.org/library/rss/latest_news_e.xml",
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
@@ -246,6 +246,7 @@ function renderItems() {
     title.style.fontWeight = 'bold';
     title.style.textDecoration = 'none';
     title.style.color = '#333';
+    title.title = '直接访问（可能需要 VPN）';
 
     const meta = document.createElement('div');
     meta.style.color = '#666';
@@ -271,11 +272,27 @@ function renderItems() {
     const plainText = tempDiv.textContent || tempDiv.innerText || '';
     desc.textContent = plainText.slice(0, 200) + (plainText.length > 200 ? '...' : '');
 
+    // 添加代理访问按钮
+    const proxyBtn = document.createElement('a');
+    proxyBtn.href = `https://translate.google.com/translate?sl=auto&tl=zh-CN&u=${encodeURIComponent(item.link)}`;
+    proxyBtn.target = '_blank';
+    proxyBtn.textContent = '🌐 通过代理阅读';
+    proxyBtn.style.display = 'inline-block';
+    proxyBtn.style.marginTop = '8px';
+    proxyBtn.style.padding = '4px 12px';
+    proxyBtn.style.background = '#e3f2fd';
+    proxyBtn.style.color = '#1976d2';
+    proxyBtn.style.textDecoration = 'none';
+    proxyBtn.style.borderRadius = '4px';
+    proxyBtn.style.fontSize = '12px';
+    proxyBtn.title = '使用 Google 翻译代理访问（无需 VPN）';
+
     card.appendChild(title);
     card.appendChild(meta);
     if (desc.textContent) {
       card.appendChild(desc);
     }
+    card.appendChild(proxyBtn);
     list.appendChild(card);
   });
 
