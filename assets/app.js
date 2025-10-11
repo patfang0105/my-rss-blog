@@ -280,9 +280,9 @@ function renderItems() {
     proxyContainer.style.flexWrap = 'wrap';
     proxyContainer.style.alignItems = 'center';
     
-    // 展开全文按钮
+    // 展开摘要按钮
     const expandBtn = document.createElement('button');
-    expandBtn.textContent = '📖 展开全文';
+    expandBtn.textContent = '📄 查看摘要';
     expandBtn.style.padding = '4px 12px';
     expandBtn.style.background = '#4caf50';
     expandBtn.style.color = 'white';
@@ -290,9 +290,9 @@ function renderItems() {
     expandBtn.style.borderRadius = '4px';
     expandBtn.style.fontSize = '12px';
     expandBtn.style.cursor = 'pointer';
-    expandBtn.title = '展开查看完整文章内容';
+    expandBtn.title = '展开查看文章摘要';
     
-    // 全文容器（默认隐藏）
+    // 摘要容器（默认隐藏）
     const fullContent = document.createElement('div');
     fullContent.style.display = 'none';
     fullContent.style.marginTop = '10px';
@@ -305,43 +305,100 @@ function renderItems() {
     fullContent.style.lineHeight = '1.6';
     fullContent.innerHTML = item.description || '<p>暂无详细内容</p>';
     
-    // 点击展开/收起
+    // 点击展开/收起摘要
     expandBtn.addEventListener('click', () => {
       if (fullContent.style.display === 'none') {
         fullContent.style.display = 'block';
-        expandBtn.textContent = '📕 收起全文';
+        expandBtn.textContent = '📕 收起摘要';
         expandBtn.style.background = '#ff9800';
       } else {
         fullContent.style.display = 'none';
-        expandBtn.textContent = '📖 展开全文';
+        expandBtn.textContent = '📄 查看摘要';
         expandBtn.style.background = '#4caf50';
       }
     });
     
-    // 访问原文链接
+    // 智能全文阅读按钮（显示选项菜单）
+    const fullTextBtn = document.createElement('button');
+    fullTextBtn.textContent = '📖 阅读全文';
+    fullTextBtn.style.padding = '4px 12px';
+    fullTextBtn.style.background = '#ff5722';
+    fullTextBtn.style.color = 'white';
+    fullTextBtn.style.border = 'none';
+    fullTextBtn.style.borderRadius = '4px';
+    fullTextBtn.style.fontSize = '12px';
+    fullTextBtn.style.cursor = 'pointer';
+    fullTextBtn.style.fontWeight = 'bold';
+    fullTextBtn.title = '点击选择全文阅读方式';
+    
+    // 全文阅读选项菜单（默认隐藏）
+    const fullTextMenu = document.createElement('div');
+    fullTextMenu.style.display = 'none';
+    fullTextMenu.style.position = 'absolute';
+    fullTextMenu.style.background = 'white';
+    fullTextMenu.style.border = '1px solid #ddd';
+    fullTextMenu.style.borderRadius = '5px';
+    fullTextMenu.style.padding = '10px';
+    fullTextMenu.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+    fullTextMenu.style.zIndex = '1000';
+    fullTextMenu.style.minWidth = '200px';
+    fullTextMenu.innerHTML = `
+      <div style="font-size: 13px; color: #333; margin-bottom: 8px; font-weight: bold;">选择阅读方式：</div>
+      <a href="https://r.jina.ai/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-weight: bold;">
+        ✅ 智能全文阅读（推荐）
+      </a>
+      <a href="${item.link}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #2196f3; color: white; text-decoration: none; border-radius: 4px; text-align: center;">
+        🌍 原网站阅读（需 VPN）
+      </a>
+      <div style="font-size: 11px; color: #666; margin-top: 8px; padding: 5px; background: #e8f5e9; border-radius: 3px; line-height: 1.4;">
+        💡 <strong>智能全文阅读</strong>由 Jina AI 提供<br>
+        • 无需 VPN，境内可用<br>
+        • 自动提取正文内容<br>
+        • 去除广告和干扰
+      </div>
+    `;
+    
+    // 点击按钮切换菜单
+    fullTextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (fullTextMenu.style.display === 'none') {
+        fullTextMenu.style.display = 'block';
+        fullTextBtn.textContent = '❌ 关闭菜单';
+      } else {
+        fullTextMenu.style.display = 'none';
+        fullTextBtn.textContent = '📖 阅读全文';
+      }
+    });
+    
+    // 点击页面其他地方关闭菜单
+    document.addEventListener('click', () => {
+      if (fullTextMenu.style.display === 'block') {
+        fullTextMenu.style.display = 'none';
+        fullTextBtn.textContent = '📖 阅读全文';
+      }
+    });
+    
+    // 访问原文链接（简化版）
     const originalBtn = document.createElement('a');
     originalBtn.href = item.link;
     originalBtn.target = '_blank';
-    originalBtn.textContent = '🔗 访问原文';
+    originalBtn.textContent = '🔗 原文';
     originalBtn.style.display = 'inline-block';
     originalBtn.style.padding = '4px 12px';
-    originalBtn.style.background = '#2196f3';
+    originalBtn.style.background = '#607d8b';
     originalBtn.style.color = 'white';
     originalBtn.style.textDecoration = 'none';
     originalBtn.style.borderRadius = '4px';
     originalBtn.style.fontSize = '12px';
-    originalBtn.title = '访问原网站（可能需要 VPN）';
+    originalBtn.title = '直接访问原网站（可能需要 VPN）';
     
-    // 提示文字
-    const hint = document.createElement('span');
-    hint.textContent = '（无需 VPN）';
-    hint.style.fontSize = '11px';
-    hint.style.color = '#4caf50';
-    hint.style.fontWeight = 'bold';
+    // 容器需要relative定位以支持菜单
+    card.style.position = 'relative';
     
     proxyContainer.appendChild(expandBtn);
-    proxyContainer.appendChild(hint);
+    proxyContainer.appendChild(fullTextBtn);
     proxyContainer.appendChild(originalBtn);
+    card.appendChild(fullTextMenu);
 
     card.appendChild(title);
     card.appendChild(meta);
