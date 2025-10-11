@@ -274,9 +274,9 @@ function renderItems() {
 
     // 添加代理访问按钮
     const proxyBtn = document.createElement('a');
-    proxyBtn.href = `https://translate.google.com/translate?sl=auto&tl=zh-CN&u=${encodeURIComponent(item.link)}`;
+    proxyBtn.href = `https://www.bing.com/translator?ref=TThis&text=&from=en&to=zh-Hans&a=${encodeURIComponent(item.link)}`;
     proxyBtn.target = '_blank';
-    proxyBtn.textContent = '🌐 通过代理阅读';
+    proxyBtn.textContent = '🌐 通过 Bing 代理阅读';
     proxyBtn.style.display = 'inline-block';
     proxyBtn.style.marginTop = '8px';
     proxyBtn.style.padding = '4px 12px';
@@ -285,7 +285,7 @@ function renderItems() {
     proxyBtn.style.textDecoration = 'none';
     proxyBtn.style.borderRadius = '4px';
     proxyBtn.style.fontSize = '12px';
-    proxyBtn.title = '使用 Google 翻译代理访问（无需 VPN）';
+    proxyBtn.title = '使用必应翻译代理访问（国内可用，无需 VPN）';
 
     card.appendChild(title);
     card.appendChild(meta);
