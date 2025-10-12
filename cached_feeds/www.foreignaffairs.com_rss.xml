@@ -71,15 +71,6 @@
     <media:content url="https://cdn-live.foreignaffairs.com/sites/default/files/styles/x_large_1x/public/images/2025/10/08/2025-07-09T043843Z_316396669_RC2SIFAGEVOI_RTRMADP_3_TAIWAN-DEFENCE.JPG?itok=ROniWiYB" type="image/jpeg" expression="full" width="1200" height="800"/>
     </item>
 <item>
-  <title>AUKUS Anxiety</title>
-  <link>https://www.foreignaffairs.com/australia/aukus-anxiety</link>
-  <description>Unmet expectations could fracture the U.S.-Australian alliance.</description>
-  <pubDate>Wed, 08 Oct 2025 00:00:00 -0400</pubDate>
-    <dc:creator>James Curran</dc:creator>
-    <guid isPermaLink="false">1133831</guid>
-    <media:content url="https://cdn-live.foreignaffairs.com/sites/default/files/styles/x_large_1x/public/images/2025/10/07/2025-03-16T095159Z_1410228937_RC23EDAX4C27_RTRMADP_3_AUSTRALIA-USA.JPG?itok=rxHh4pxF" type="image/jpeg" expression="full" width="1200" height="800"/>
-    </item>
-<item>
   <title>How Russia Recovered</title>
   <link>https://www.foreignaffairs.com/russia/how-russia-recovered</link>
   <description>What the Kremlin is learning from the war in Ukraine.</description>
@@ -87,6 +78,15 @@
     <dc:creator>Dara Massicot</dc:creator>
     <guid isPermaLink="false">1133841</guid>
     <media:content url="https://cdn-live.foreignaffairs.com/sites/default/files/styles/x_large_1x/public/images/2025/10/06/1_Massicot_Lead.png?itok=9Ihqt9A6" type="image/png" expression="full" width="1200" height="800"/>
+    </item>
+<item>
+  <title>AUKUS Anxiety</title>
+  <link>https://www.foreignaffairs.com/australia/aukus-anxiety</link>
+  <description>Unmet expectations could fracture the U.S.-Australian alliance.</description>
+  <pubDate>Wed, 08 Oct 2025 00:00:00 -0400</pubDate>
+    <dc:creator>James Curran</dc:creator>
+    <guid isPermaLink="false">1133831</guid>
+    <media:content url="https://cdn-live.foreignaffairs.com/sites/default/files/styles/x_large_1x/public/images/2025/10/07/2025-03-16T095159Z_1410228937_RC23EDAX4C27_RTRMADP_3_AUSTRALIA-USA.JPG?itok=rxHh4pxF" type="image/jpeg" expression="full" width="1200" height="800"/>
     </item>
 <item>
   <title>A Snapback Solution for Ukraine</title>
