@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-10-11T18:39:31.014781Z",
+  "last_update": "2025-10-12T03:12:10.882336Z",
   "feeds": [
     {
       "url": "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
@@ -17,7 +17,7 @@
       "url": "https://www.atlanticcouncil.org/feed/",
       "status": "success",
       "cached_file": "www.atlanticcouncil.org_feed_",
-      "size": 182946
+      "size": 182947
     },
     {
       "url": "https://www.imf.org/en/publications/rss?language=eng",
