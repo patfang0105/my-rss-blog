@@ -1,11 +1,11 @@
 {
-  "last_update": "2025-10-12T03:12:10.882336Z",
+  "last_update": "2025-10-12T06:42:59.654128Z",
   "feeds": [
     {
       "url": "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
       "status": "success",
       "cached_file": "patfang0105.github.io_my-rss-feeds_rss_www_csis_org.xml",
-      "size": 5400
+      "size": 5352
     },
     {
       "url": "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
