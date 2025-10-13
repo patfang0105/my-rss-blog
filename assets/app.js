@@ -280,43 +280,6 @@ function renderItems() {
     proxyContainer.style.flexWrap = 'wrap';
     proxyContainer.style.alignItems = 'center';
     
-    // 展开摘要按钮
-    const expandBtn = document.createElement('button');
-    expandBtn.textContent = '📄 查看摘要';
-    expandBtn.style.padding = '4px 12px';
-    expandBtn.style.background = '#4caf50';
-    expandBtn.style.color = 'white';
-    expandBtn.style.border = 'none';
-    expandBtn.style.borderRadius = '4px';
-    expandBtn.style.fontSize = '12px';
-    expandBtn.style.cursor = 'pointer';
-    expandBtn.title = '展开查看文章摘要';
-    
-    // 摘要容器（默认隐藏）
-    const fullContent = document.createElement('div');
-    fullContent.style.display = 'none';
-    fullContent.style.marginTop = '10px';
-    fullContent.style.padding = '15px';
-    fullContent.style.background = '#f9f9f9';
-    fullContent.style.borderRadius = '5px';
-    fullContent.style.maxHeight = '400px';
-    fullContent.style.overflowY = 'auto';
-    fullContent.style.fontSize = '14px';
-    fullContent.style.lineHeight = '1.6';
-    fullContent.innerHTML = item.description || '<p>暂无详细内容</p>';
-    
-    // 点击展开/收起摘要
-    expandBtn.addEventListener('click', () => {
-      if (fullContent.style.display === 'none') {
-        fullContent.style.display = 'block';
-        expandBtn.textContent = '📕 收起摘要';
-        expandBtn.style.background = '#ff9800';
-      } else {
-        fullContent.style.display = 'none';
-        expandBtn.textContent = '📄 查看摘要';
-        expandBtn.style.background = '#4caf50';
-      }
-    });
     
     // 智能全文阅读按钮（显示选项菜单）
     const fullTextBtn = document.createElement('button');
@@ -343,14 +306,11 @@ function renderItems() {
     fullTextMenu.style.zIndex = '1000';
     fullTextMenu.style.minWidth = '200px';
     fullTextMenu.innerHTML = `
-      <div style="font-size: 13px; color: #333; margin-bottom: 8px; font-weight: bold;">选择阅读方式：</div>
-      <a href="https://r.jina.ai/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-weight: bold;">
-        ✅ 智能全文阅读（推荐）
+      <div style="font-size: 13px; color: #333; margin-bottom: 8px; font-weight: bold;">智能全文阅读：</div>
+      <a href="https://r.jina.ai/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 12px; margin: 4px 0; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-weight: bold; font-size: 14px;">
+        ✅ 使用 Jina AI 智能阅读
       </a>
-      <a href="${item.link}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #2196f3; color: white; text-decoration: none; border-radius: 4px; text-align: center;">
-        🌍 原网站阅读（需 VPN）
-      </a>
-      <div style="font-size: 11px; color: #666; margin-top: 8px; padding: 5px; background: #e8f5e9; border-radius: 3px; line-height: 1.4;">
+      <div style="font-size: 11px; color: #666; margin-top: 8px; padding: 8px; background: #e8f5e9; border-radius: 3px; line-height: 1.4;">
         💡 <strong>智能全文阅读</strong>由 Jina AI 提供<br>
         • 无需 VPN，境内可用<br>
         • 自动提取正文内容<br>
@@ -395,7 +355,6 @@ function renderItems() {
     // 容器需要relative定位以支持菜单
     card.style.position = 'relative';
     
-    proxyContainer.appendChild(expandBtn);
     proxyContainer.appendChild(fullTextBtn);
     proxyContainer.appendChild(originalBtn);
     card.appendChild(fullTextMenu);
@@ -406,7 +365,6 @@ function renderItems() {
       card.appendChild(desc);
     }
     card.appendChild(proxyContainer);
-    card.appendChild(fullContent);
     list.appendChild(card);
   });
 
