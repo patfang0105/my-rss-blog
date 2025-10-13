@@ -1,14 +1,14 @@
 // 简易前端聚合器：合并多个 RSS 源并展示（本地浏览器运行）
-// 使用缓存优先策略 + 多代理备用方案，彻底解决网络访问限制问题
+// 使用多代理服务，彻底解决网络访问限制问题
 
 const FEEDS = [
   "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
   "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
   "https://www.atlanticcouncil.org/feed/",
-  // "https://www.imf.org/en/publications/rss?language=eng",  // ❌ 缓存失败：超时
+  "https://www.imf.org/en/publications/rss?language=eng",
   "http://project-syndicate.org/rss",
-  // "https://rhg.com/feed/",  // ❌ 缓存失败：403 Forbidden
-  // "https://www.aei.org/feed/",  // ❌ 缓存失败：403 Forbidden
+  "https://rhg.com/feed/",
+  "https://www.aei.org/feed/",
   "https://www.wto.org/library/rss/latest_news_e.xml",
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
@@ -21,35 +21,11 @@ const state = {
   allItems: [], // 存储所有未过滤的文章
   isLoading: false,
   timeFilter: 'all', // 当前选择的时间筛选
-  metadata: null, // 缓存元数据
 };
 
-// 生成缓存文件名
-function getCachedFilename(url) {
-  return url.replace('https://', '').replace('http://', '').replace(/\//g, '_').replace(/\?/g, '_').replace(/=/g, '_');
-}
 
 async function fetchFeed(url) {
-  // 策略1: 优先尝试从 GitHub Pages 缓存读取（最可靠）
-  const cachedFilename = getCachedFilename(url);
-  const cacheUrl = `./cached_feeds/${cachedFilename}`;
-  
-  try {
-    console.log(`尝试从缓存读取: ${url}`);
-    const response = await fetch(cacheUrl);
-    if (response.ok) {
-      const text = await response.text();
-      const items = parseRSSText(text, url);
-      if (items && items.length > 0) {
-        console.log(`✓ 从缓存成功读取 ${url}`);
-        return items;
-      }
-    }
-  } catch (e) {
-    console.warn(`缓存读取失败，尝试代理: ${e.message}`);
-  }
-  
-  // 策略2: 如果缓存失败，使用多代理服务作为备用方案
+  // 使用多代理服务获取RSS内容
   const PROXY_SERVICES = [
     {
       name: 'rss2json',
@@ -371,44 +347,6 @@ function renderItems() {
   container.appendChild(list);
 }
 
-// 加载缓存元数据
-async function loadMetadata() {
-  try {
-    const response = await fetch('./cached_feeds/metadata.json');
-    if (response.ok) {
-      state.metadata = await response.json();
-      displayCacheInfo();
-    }
-  } catch (e) {
-    console.warn('无法加载缓存元数据');
-  }
-}
-
-// 显示缓存信息
-function displayCacheInfo() {
-  if (!state.metadata) return;
-  
-  const lastUpdate = new Date(state.metadata.last_update);
-  const timeStr = lastUpdate.toLocaleString('zh-CN', { 
-    year: 'numeric', 
-    month: '2-digit', 
-    day: '2-digit', 
-    hour: '2-digit', 
-    minute: '2-digit' 
-  });
-  
-  const successCount = state.metadata.feeds.filter(f => f.status === 'success').length;
-  const totalCount = state.metadata.feeds.length;
-  
-  const infoEl = document.getElementById('cacheInfo');
-  if (infoEl) {
-    infoEl.innerHTML = `
-      <span style="color: #28a745;">● 使用缓存模式</span> | 
-      最后更新: ${timeStr} | 
-      可用源: ${successCount}/${totalCount}
-    `;
-  }
-}
 
 async function refresh() {
   state.isLoading = true;
@@ -416,9 +354,6 @@ async function refresh() {
   
   try {
     console.log('开始刷新 RSS 源...');
-    
-    // 加载元数据
-    await loadMetadata();
     
     const all = await Promise.allSettled(FEEDS.map(fetchFeed));
     const merged = [];
