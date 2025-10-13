@@ -282,15 +282,25 @@ function renderItems() {
     fullTextMenu.style.zIndex = '1000';
     fullTextMenu.style.minWidth = '200px';
     fullTextMenu.innerHTML = `
-      <div style="font-size: 13px; color: #333; margin-bottom: 8px; font-weight: bold;">智能全文阅读：</div>
-      <a href="https://r.jina.ai/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 12px; margin: 4px 0; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-weight: bold; font-size: 14px;">
-        ✅ 使用 Jina AI 智能阅读
+      <div style="font-size: 13px; color: #333; margin-bottom: 8px; font-weight: bold;">选择阅读方式：</div>
+      <a href="https://r.jina.ai/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #4caf50; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-weight: bold; font-size: 12px;">
+        ✅ Jina AI 智能阅读
       </a>
-      <div style="font-size: 11px; color: #666; margin-top: 8px; padding: 8px; background: #e8f5e9; border-radius: 3px; line-height: 1.4;">
-        💡 <strong>智能全文阅读</strong>由 Jina AI 提供<br>
-        • 无需 VPN，境内可用<br>
-        • 自动提取正文内容<br>
-        • 去除广告和干扰
+      <a href="https://readability.tech/?url=${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #2196f3; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px;">
+        📖 Readability 阅读器
+      </a>
+      <a href="https://mercury.postlight.com/parser?url=${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #ff9800; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px;">
+        🔍 Mercury Reader
+      </a>
+      <a href="https://outline.com/${encodeURIComponent(item.link)}" target="_blank" style="display: block; padding: 8px; margin: 4px 0; background: #9c27b0; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 12px;">
+        📄 Outline 阅读
+      </a>
+      <div style="font-size: 10px; color: #666; margin-top: 8px; padding: 6px; background: #f5f5f5; border-radius: 3px; line-height: 1.3;">
+        💡 <strong>多种选择</strong>：如果某个工具无法正常显示正文，请尝试其他选项<br>
+        • Jina AI：智能提取，境内可用<br>
+        • Readability：简洁界面，专注阅读<br>
+        • Mercury：专业解析，结构清晰<br>
+        • Outline：去除干扰，纯净阅读
       </div>
     `;
     
