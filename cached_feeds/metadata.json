@@ -1,5 +1,5 @@
 {
-  "last_update": "2025-10-13T03:32:30.860872Z",
+  "last_update": "2025-10-13T06:53:42.658499Z",
   "feeds": [
     {
       "url": "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
@@ -17,7 +17,7 @@
       "url": "https://www.atlanticcouncil.org/feed/",
       "status": "success",
       "cached_file": "www.atlanticcouncil.org_feed_",
-      "size": 183209
+      "size": 183210
     },
     {
       "url": "https://www.imf.org/en/publications/rss?language=eng",
@@ -50,7 +50,7 @@
       "url": "https://www.foreignaffairs.com/rss.xml",
       "status": "success",
       "cached_file": "www.foreignaffairs.com_rss.xml",
-      "size": 13723
+      "size": 13801
     },
     {
       "url": "https://www.piie.com/rss/update.xml",
