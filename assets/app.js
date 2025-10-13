@@ -13,7 +13,8 @@ const FEEDS = [
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
   "https://amro-asia.org/feed/",
-  "https://politepol.com/fd/X589A2bsRjn8.xml"
+  "https://politepol.com/fd/X589A2bsRjn8.xml",
+  "https://cepr.org/rss/vox-content"
 ];
 
 const state = {
