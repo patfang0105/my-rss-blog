@@ -14,7 +14,8 @@ const FEEDS = [
   "https://www.piie.com/rss/update.xml",
   "https://amro-asia.org/feed/",
   "https://politepol.com/fd/X589A2bsRjn8.xml",
-  "https://cepr.org/rss/vox-content"
+  "https://cepr.org/rss/vox-content",
+  "https://patfang0105.github.io/my-rss-feeds/rss_bu_gdp.xml"
 ];
 
 const state = {
