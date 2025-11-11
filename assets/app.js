@@ -15,7 +15,8 @@ const FEEDS = [
   "https://amro-asia.org/feed/",
   "https://politepol.com/fd/X589A2bsRjn8.xml",
   "https://cepr.org/rss/vox-content",
-  "https://patfang0105.github.io/my-rss-feeds/rss_bu_gdp.xml"
+  "https://patfang0105.github.io/my-rss-feeds/rss_bu_gdp.xml",
+  "https://think.ing.com/rss/"
 ];
 
 const state = {
