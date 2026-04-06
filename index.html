@@ -85,6 +85,132 @@
         <p>Designed By Xiaoyuan</p>
         <p style="font-size: 12px; margin-top: 5px;">© 2025 我的 RSS 聚合站</p>
     </footer>
+    <!-- ========== 财经AI文本整理工具 - 开始粘贴 ========== -->
+<style>
+.ai-summary-tool {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+}
+.ai-summary-tool h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    text-align: center;
+}
+.ai-textarea {
+    width: 100%;
+    height: 180px;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    resize: vertical;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+.ai-btn-group {
+    margin: 12px 0;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.ai-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    background: #2d8cf0;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+.ai-btn:hover {
+    background: #1b6aff;
+}
+.ai-btn-clear {
+    background: #f7ba1e;
+}
+.ai-btn-copy {
+    background: #19be6b;
+}
+.ai-result {
+    margin-top: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+.ai-result h4 {
+    color: #2d8cf0;
+    margin: 8px 0;
+    font-size: 15px;
+}
+.ai-result p {
+    margin: 5px 0;
+    line-height: 1.6;
+    font-size: 14px;
+}
+</style>
+
+<div class="ai-summary-tool">
+    <h3>📊 财经文章AI整理工具</h3>
+    <textarea class="ai-textarea" id="inputText" placeholder="请在这里粘贴文章/报告文本（境内可访问内容）..."></textarea>
+    <div class="ai-btn-group">
+        <button class="ai-btn" onclick="generateSummary()">生成核心内容</button>
+        <button class="ai-btn ai-btn-clear" onclick="clearAll()">清空内容</button>
+        <button class="ai-btn ai-btn-copy" onclick="copyResult()">复制结果</button>
+    </div>
+    <div class="ai-result" id="resultArea" style="display: none;">
+        <h4>🎯 核心观点</h4>
+        <p id="coreIdea"></p>
+        <h4>📈 关键数据</h4>
+        <p id="keyData"></p>
+        <h4>📄 核心摘要</h4>
+        <p id="shortSummary"></p>
+    </div>
+</div>
+
+<script>
+// 财经文本智能提取逻辑 - 纯本地运行，无联网
+function generateSummary() {
+    let text = document.getElementById("inputText").value.trim();
+    if (!text) {
+        alert("请先粘贴文章内容！");
+        return;
+    }
+    document.getElementById("resultArea").style.display = "block";
+    
+    // 提取关键数据（数字、百分比、金额、年份等财经核心数据）
+    let data = text.match(/(\d+\.?\d*%|\d+\.?\d*亿元|万亿|美元|欧元|同比|环比|增速|利率|汇率|\d{4}年)/g) || ["未提取到关键数据"];
+    document.getElementById("keyData").innerText = data.join(" | ");
+
+    // 提取核心观点（取长句+关键判断句）
+    let sentences = text.split(/[。！？；]/).filter(s => s.length > 15);
+    let idea = sentences.length > 0 ? sentences[0] + "。" + (sentences[1] || "") : "无核心观点";
+    document.getElementById("coreIdea").innerText = idea.substring(0, 300) + "...";
+
+    // 生成精简摘要
+    let summary = text.length > 200 ? text.substring(0, 200) + "..." : text;
+    document.getElementById("shortSummary").innerText = summary;
+}
+
+// 清空功能
+function clearAll() {
+    document.getElementById("inputText").value = "";
+    document.getElementById("resultArea").style.display = "none";
+}
+
+// 复制结果功能
+function copyResult() {
+    let res = document.getElementById("resultArea").innerText;
+    navigator.clipboard.writeText(res).then(() => {
+        alert("复制成功！");
+    });
+}
+</script>
+<!-- ========== 财经AI文本整理工具 - 粘贴结束 ========== -->
 </body>
 </html>
 
