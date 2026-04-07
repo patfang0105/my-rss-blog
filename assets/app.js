@@ -313,8 +313,78 @@ function bindUI() {
   });
 }
 
+// ========== AI 智能梳理功能 ==========
+const AI_API_KEY = 'sk-73f087f61dac445cb086dde246685a86';  // 粘贴您的完整Key
+const AI_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+
+async function getAISummary(articles) {
+    const latest = articles.slice(0, 15);
+    if (latest.length === 0) return '暂无文章，请稍后重试。';
+
+    const articleList = latest.map((item, idx) => 
+        `${idx+1}. 标题：${item.title}\n   链接：${item.link}`
+    ).join('\n');
+
+    const systemPrompt = `你是一位专业的研究助手。用户给你一系列最新文章的标题和链接，请你：
+1. 从中挑选出 3-5 篇最值得关注的文章（基于内容重要性、时效性、智库权威性）。
+2. 对每一篇推荐的文章，用一句话说明需要关注理由（50字以内）。
+3. 以友好的中文输出，格式为：
+   【推荐一】
+   文章：标题
+   理由：...
+   链接：直接输出完整URL
+   每篇之间空一行。不要输出额外解释。`;
+
+    try {
+        const response = await fetch(AI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: `请分析以下文章并推荐：\n${articleList}` }
+                ],
+                temperature: 0.3,
+                max_tokens: 800
+            })
+        });
+
+        if (!response.ok) throw new Error(`API 请求失败: ${response.status}`);
+        const data = await response.json();
+        let aiText = data.choices[0].message.content;
+        aiText = aiText.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+        aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        aiText = aiText.replace(/\n/g, '<br>');
+        return aiText;
+    } catch (error) {
+        console.error('AI 摘要失败:', error);
+        return 'AI 服务暂时不可用，请稍后重试。';
+    }
+}
+
+function bindAIButton() {
+    const btn = document.getElementById('aiSummaryBtn');
+    const contentDiv = document.getElementById('aiSummaryContent');
+    if (!btn || !contentDiv) return;
+
+    btn.addEventListener('click', async () => {
+        if (state.allItems.length === 0) {
+            contentDiv.innerHTML = '⚠️ 暂无文章，请先点击“刷新内容”加载文章。';
+            return;
+        }
+        contentDiv.innerHTML = '🤔 AI 正在分析最新文章，请稍候...';
+        const summary = await getAISummary(state.allItems);
+        contentDiv.innerHTML = summary;
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log('RSS 聚合器初始化中...');
   bindUI();
+  bindAIButton();   // <--- 添加这一行
   refresh();
 });
