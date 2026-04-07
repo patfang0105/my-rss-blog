@@ -223,7 +223,7 @@ function renderItems() {
 
     // 使用 Textise 代理（稳定，免VPN）
     const fullTextBtn = document.createElement('a');
-    fullTextBtn.href = `https://www.textise.iitty/?url=${encodeURIComponent(item.link)}`;
+    fullTextBtn.href = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(item.link))}`;
     fullTextBtn.target = '_blank';
     fullTextBtn.textContent = '📖 阅读全文（Textise）';
     fullTextBtn.style.display = 'inline-block';
