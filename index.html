@@ -8,7 +8,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
@@ -35,9 +35,24 @@
             text-decoration: none;
             border-radius: 5px;
             margin: 10px;
+            border: none;
+            cursor: pointer;
         }
         .rss-link:hover {
             background: #005a9e;
+        }
+        .source-filter-link {
+            transition: all 0.2s ease;
+        }
+        .source-filter-link:hover {
+            background: #e0e0e0 !important;
+            color: #333 !important;
+        }
+        @media (max-width: 700px) {
+            body { padding: 10px; }
+            .content { padding: 12px; }
+            div[style*="display: flex"] { flex-direction: column; }
+            #sourceList { width: 100% !important; margin-bottom: 20px; }
         }
     </style>
 </head>
@@ -50,7 +65,6 @@
     <div class="content">
         <h2>🧩 单页 RSS 聚合</h2>
         <p>汇总多个精选 RSS 源为一页展示，自动更新最新内容。</p>
-        
 
         <div id="controls" style="text-align: center;">
             <button id="refreshBtn" class="rss-link">🔄 刷新内容</button>
@@ -59,44 +73,52 @@
         <div id="timeFilter" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
             <label style="font-weight: bold; color: #333; margin-right: 10px;">⏰ 时间筛选：</label>
             <label style="margin-right: 15px; cursor: pointer;">
-                <input type="radio" name="timeRange" value="all" checked style="margin-right: 5px;">
-                全部
+                <input type="radio" name="timeRange" value="all" checked style="margin-right: 5px;"> 全部
             </label>
             <label style="margin-right: 15px; cursor: pointer;">
-                <input type="radio" name="timeRange" value="24h" style="margin-right: 5px;">
-                24小时内
+                <input type="radio" name="timeRange" value="24h" style="margin-right: 5px;"> 24小时内
             </label>
             <label style="margin-right: 15px; cursor: pointer;">
-                <input type="radio" name="timeRange" value="week" style="margin-right: 5px;">
-                1周内
+                <input type="radio" name="timeRange" value="week" style="margin-right: 5px;"> 1周内
             </label>
             <label style="margin-right: 15px; cursor: pointer;">
-                <input type="radio" name="timeRange" value="month" style="margin-right: 5px;">
-                1个月内
+                <input type="radio" name="timeRange" value="month" style="margin-right: 5px;"> 1个月内
             </label>
             <span id="filterStats" style="margin-left: 20px; color: #666; font-size: 14px;"></span>
         </div>
 
         <!-- AI 智能梳理区域 -->
-<div id="aiSection" style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 10px; border-left: 5px solid #007acc;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0;">🤖 AI 今日要点</h3>
-        <button id="aiSummaryBtn" class="rss-link" style="background: #28a745; padding: 5px 15px;">✨ 生成推荐</button>
-    </div>
-    <div id="aiSummaryContent" style="margin-top: 12px; font-size: 14px; color: #333;">
-        点击上方按钮，AI 将分析最新文章并推荐值得关注的内容。
-    </div>
-</div>
+        <div id="aiSection" style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 10px; border-left: 5px solid #007acc;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0;">🤖 AI 今日要点</h3>
+                <button id="aiSummaryBtn" class="rss-link" style="background: #28a745; padding: 5px 15px;">✨ 生成推荐</button>
+            </div>
+            <div id="aiSummaryContent" style="margin-top: 12px; font-size: 14px; color: #333;">
+                点击上方按钮，AI 将分析最新文章并推荐值得关注的内容。
+            </div>
+        </div>
 
-        <h3>📰 最新内容</h3>
-        <div id="items"></div>
+        <!-- 左右两栏布局 -->
+        <div style="display: flex; gap: 30px; margin-top: 20px;">
+            <!-- 左侧：智库列表栏 -->
+            <div id="sourceList" style="width: 260px; flex-shrink: 0; background: #f8f9fa; border-radius: 10px; padding: 15px;">
+                <h4 style="margin-top: 0; margin-bottom: 10px;">📚 智库列表</h4>
+                <div id="sourceListItems" style="font-size: 14px;">
+                    <p>加载中...</p>
+                </div>
+            </div>
+
+            <!-- 右侧：文章列表栏 -->
+            <div style="flex: 1;">
+                <h3>📰 最新内容</h3>
+                <div id="items"></div>
+            </div>
+        </div>
     </div>
     
     <footer style="text-align: center; margin-top: 30px; padding: 20px; color: #666; font-size: 14px;">
         <p>Designed By Xiaoyuan</p>
         <p style="font-size: 12px; margin-top: 5px;">© 2025 我的 RSS 聚合站</p>
     </footer>
-   
 </body>
 </html>
-
