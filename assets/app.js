@@ -16,7 +16,8 @@ const FEEDS = [
   "https://politepol.com/fd/X589A2bsRjn8.xml",
   "https://cepr.org/rss/vox-content",
   "https://patfang0105.github.io/my-rss-feeds/rss_bu_gdp.xml",
-  "https://think.ing.com/rss/"
+  "https://think.ing.com/rss/",
+  "https://www.economist.com/finance-and-economics/rss.xml"
 ];
 
 const state = {
