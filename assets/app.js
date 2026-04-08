@@ -2,20 +2,17 @@
 // 使用多代理服务，彻底解决网络访问限制问题
 
 const FEEDS = [
-  "https://patfang0105.github.io/my-rss-feeds/rss_www_csis_org.xml",
-  "https://patfang0105.github.io/my-rss-feeds/rss_www_cfr_org.xml",
   "https://www.atlanticcouncil.org/feed/",
-  "https://www.imf.org/en/publications/rss?language=eng",
   "http://project-syndicate.org/rss",
   "https://rhg.com/feed/",
   "https://www.aei.org/feed/",
-  "https://www.wto.org/library/rss/latest_news_e.xml",
+  "http://www.wto.org/library/rss/latest_news_e.xml",
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
   "https://amro-asia.org/feed/",
   "https://politepol.com/fd/X589A2bsRjn8.xml",
   "https://cepr.org/rss/vox-content",
-  "https://patfang0105.github.io/my-rss-feeds/rss_bu_gdp.xml",
+  "https://www.bu.edu/gdp/feed/",
   "https://think.ing.com/rss/",
   "https://www.economist.com/finance-and-economics/rss.xml"
 ];
