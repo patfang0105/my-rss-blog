@@ -25,12 +25,12 @@ TARGET_SITES = [
         "date_selector": "time, .date"
     },
     {
-        "name": "CSIS",
-        "url": "https://www.csis.org/",
-        "article_selector": "div.views-row",   # 修改为更精确的容器
-        "title_selector": "h3 a span, h3 a",
-        "link_selector": "h3 a",
-        "date_selector": "div.mt-0.utility-xs, time"
+    "name": "CSIS",
+    "url": "https://www.csis.org/analysis",  # 分析类文章列表页
+    "article_selector": "article.article-search-listing",
+    "title_selector": "h2 a, h3 a",
+    "link_selector": "h2 a, h3 a",
+    "date_selector": "time, .date"
     }
 ]
 # ====================================================
