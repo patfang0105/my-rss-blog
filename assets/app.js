@@ -482,7 +482,7 @@ async function loadRecommendations() {
         const data = await resp.json();
         let aiText = data.ai_recommendations || '暂无推荐';
         
-        // 将文本中的原始链接（https://...）转换为 Textise 代理链接
+        // 将文本中的原始链接转换为 Textise 代理链接（可点击）
         aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, function(url) {
             const proxyUrl = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(url))}`;
             return `<a href="${proxyUrl}" target="_blank">${url}</a>`;
@@ -496,6 +496,7 @@ async function loadRecommendations() {
         container.innerHTML = '加载推荐失败，请检查 recommendations.json 是否存在。';
     }
 }
+
 // ========== UI 绑定与初始化 ==========
 function bindUI() {
     const refreshBtn = document.getElementById('refreshBtn');
