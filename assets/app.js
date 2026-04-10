@@ -481,19 +481,15 @@ async function loadRecommendations() {
         if (!resp.ok) throw new Error('文件不存在');
         const data = await resp.json();
         let aiText = data.ai_recommendations || '暂无推荐';
-        
-        // 将文本中的原始链接转换为 Textise 代理链接（可点击）
         aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, function(url) {
             const proxyUrl = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(url))}`;
             return `<a href="${proxyUrl}" target="_blank">${url}</a>`;
         });
-        
-        // 将换行符转换为 <br>
         aiText = aiText.replace(/\n/g, '<br>');
         container.innerHTML = aiText;
     } catch(e) {
         console.error('加载推荐失败:', e);
-        container.innerHTML = '加载推荐失败，请检查 recommendations.json 是否存在。';
+        container.innerHTML = '暂无推荐，请稍后再试。';
     }
 }
 
