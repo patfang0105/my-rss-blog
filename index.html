@@ -87,14 +87,11 @@
             <span id="filterStats" style="margin-left: 20px; color: #666; font-size: 14px;"></span>
         </div>
 
-        <!-- AI 智能梳理区域 -->
-        <div id="aiSection" style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-radius: 10px; border-left: 5px solid #007acc;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="margin: 0;">🤖 AI 今日要点</h3>
-                <button id="aiSummaryBtn" class="rss-link" style="background: #28a745; padding: 5px 15px;">✨ 生成推荐</button>
-            </div>
-            <div id="aiSummaryContent" style="margin-top: 12px; font-size: 14px; color: #333;">
-                点击上方按钮，AI 将分析最新文章并推荐值得关注的内容。
+        <!-- ⭐ AI 精选推荐板块（取代原来的 AI 今日要点） -->
+        <div id="aiRecommendationsPanel" style="margin: 20px 0; padding: 15px; background: #fff8e7; border-radius: 10px; border-left: 5px solid #ff9800;">
+            <h3 style="margin-top: 0; margin-bottom: 10px;">⭐ AI 精选推荐</h3>
+            <div id="recommendationsList" style="font-size: 14px; line-height: 1.5; max-height: 500px; overflow-y: auto;">
+                加载中...
             </div>
         </div>
 
