@@ -10,11 +10,11 @@ from urllib.parse import urljoin
 TARGET_SITES = [
     {
         "name": "Brookings",
-        "url": "https://www.brookings.edu/?s=",
-        "article_selector": "article",           # 通用
+        "url": "https://www.brookings.edu/",
+        "article_selector": "article",
         "title_selector": "h2, h3",
         "link_selector": "a",
-        "date_selector": "time, .date, .published"  # 尝试提取日期
+        "date_selector": "time, .date, .published"
     },
     {
         "name": "Rhodium Group",
@@ -27,12 +27,11 @@ TARGET_SITES = [
     {
         "name": "CSIS",
         "url": "https://www.csis.org/",
-        "article_selector": "article",
-        "title_selector": "h2, h3",
-        "link_selector": "a",
-        "date_selector": "time, .date"
+        "article_selector": "div.views-row",   # 修改为更精确的容器
+        "title_selector": "h3 a span, h3 a",
+        "link_selector": "h3 a",
+        "date_selector": "div.mt-0.utility-xs, time"
     }
-    # 可以继续添加，按照相同格式
 ]
 # ====================================================
 
@@ -46,7 +45,7 @@ def fetch_articles(site):
         articles = []
         containers = soup.select(site["article_selector"])
         
-        for container in containers[:12]:  # 每个网站最多12篇
+        for container in containers[:12]:
             # 提取标题
             title_tag = container.select_one(site["title_selector"]) if site["title_selector"] else container.find(["h2", "h3"])
             if not title_tag:
@@ -61,21 +60,19 @@ def fetch_articles(site):
                 continue
             link = urljoin(site["url"], link_tag["href"])
             
-            # 提取日期（如果有）
+            # 提取日期
             pub_date = ""
             if "date_selector" in site and site["date_selector"]:
                 date_tag = container.select_one(site["date_selector"])
                 if date_tag:
                     raw_date = date_tag.get_text(strip=True)
-                    # 尝试解析常见日期格式，例如 "Apr 10, 2025" 或 "2025-04-10"
                     match = re.search(r'(\d{4}-\d{2}-\d{2})', raw_date)
                     if not match:
                         match = re.search(r'([A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})', raw_date)
                     if match:
                         pub_date = match.group(0)
                     else:
-                        pub_date = raw_date[:20]  # 截取前20字符
-            # 如果没有提取到日期，使用今天的日期（表示“近期”）
+                        pub_date = raw_date[:20]
             if not pub_date:
                 pub_date = datetime.now().strftime("%Y-%m-%d")
             
@@ -85,9 +82,12 @@ def fetch_articles(site):
                 "source": site["name"],
                 "date": pub_date
             })
-            print(f"  抓取到 {len(articles)} 篇文章，标题如下：")
-    for idx, art in enumerate(articles, 1):
-        print(f"    {idx}. {art['title']}")
+        
+        # 打印抓取到的文章标题（用于调试）
+        print(f"  抓取到 {len(articles)} 篇文章，标题如下：")
+        for idx, art in enumerate(articles, 1):
+            print(f"    {idx}. {art['title']}")
+        
         return articles
     except Exception as e:
         print(f"抓取 {site['name']} 失败: {e}")
@@ -152,7 +152,7 @@ def main():
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                "temperature": 0.2,   # 降低温度，让输出更稳定
+                "temperature": 0.2,
                 "max_tokens": 1200
             },
             timeout=60
