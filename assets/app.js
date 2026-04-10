@@ -1,6 +1,21 @@
 // 简易前端聚合器：合并多个 RSS 源并展示（本地浏览器运行）
 // 使用多代理服务，彻底解决网络访问限制问题
 
+// ========== 在这里配置您想要 AI 关注的智库名称列表 ==========
+// AI 只会分析下面这些来源的文章，其他来源的文章不会被 AI 推荐
+const TARGET_SOURCES = [
+    "World Bank",
+    "OECD",
+    "IMF",
+    "Rhodium Group",
+    "Brookings Institution",
+    "CSIS",
+    "UNCTAD"
+];
+// 注意：这些名称需要与 RSS 中 item.source 字段匹配（不区分大小写）
+// 如果某个来源的 RSS 中显示的名称不同，请根据实际显示的名称修改
+// ========================================================
+
 const FEEDS = [
   "https://www.atlanticcouncil.org/feed/",
   "http://project-syndicate.org/rss",
@@ -24,7 +39,7 @@ const state = {
   timeFilter: 'all',
 };
 
-let currentSource = 'all';  // 当前选中的来源
+let currentSource = 'all';
 
 // ========== RSS 抓取部分（保持不变）==========
 async function fetchFeed(url) {
@@ -178,6 +193,7 @@ function getSourceStats() {
 }
 
 function escapeHtml(str) {
+  if (!str) return '';
   return str.replace(/[&<>]/g, function(m) {
     if (m === '&') return '&amp;';
     if (m === '<') return '&lt;';
@@ -357,95 +373,162 @@ async function refresh() {
   }
 }
 
-// ========== AI 智能梳理（使用硅基流动，免费且支持浏览器直接调用）==========
+// ========== AI 智能梳理（只关注 TARGET_SOURCES 中的来源）==========
 // 请到 https://cloud.siliconflow.cn/ 注册，获取 API Key，替换下面的字符串
-const AI_API_KEY = '你的硅基流动API Key';   // 例如：sk-xxxxxxxxxxxxx
+const AI_API_KEY = 'sk-ahfjemfxrpxpgjozrzwmnmncxyuyhonqlepfllikksnwrand';   // 例如：sk-xxxxxxxxxxxxx
 const AI_API_URL = 'https://api.siliconflow.cn/v1/chat/completions';
 
 async function getAISummary(articles) {
-  const latest = articles.slice(0, 15);
-  if (latest.length === 0) return '暂无文章，请稍后重试。';
-  const articleList = latest.map((item, idx) => 
-    `${idx+1}. 标题：${item.title}\n   链接：${item.link}`
-  ).join('\n');
-  const systemPrompt = `你是一位专业的研究助手。用户给你一系列最新文章的标题和链接，请你：
-1. 从中挑选出 3-5 篇最值得关注的文章（基于内容重要性、时效性、智库权威性）。
-2. 对每一篇推荐的文章，用一句话说明推荐理由（50字以内）。
-3. 以友好的中文输出，格式为：
-   【推荐一】
-   文章：标题
-   理由：...
-   链接：直接输出完整URL
-   每篇之间空一行。不要输出额外解释。`;
-  try {
-    const response = await fetch(AI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${AI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'deepseek-ai/DeepSeek-V3',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `请分析以下文章并推荐：\n${articleList}` }
-        ],
-        temperature: 0.3,
-        max_tokens: 800
-      })
+    // 只保留来源在 TARGET_SOURCES 中的文章（不区分大小写，去除首尾空格）
+    const targetSet = new Set(TARGET_SOURCES.map(s => s.trim().toLowerCase()));
+    const filteredArticles = articles.filter(article => {
+        const sourceName = (article.source || '').trim().toLowerCase();
+        return targetSet.has(sourceName);
     });
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`API 请求失败: ${response.status} - ${errText}`);
+    
+    if (filteredArticles.length === 0) {
+        return '当前没有来自指定智库（世界银行、OECD、IMF、荣鼎集团、布鲁金斯学会、CSIS、UNCTAD）的新文章。';
     }
-    const data = await response.json();
-    let aiText = data.choices[0].message.content;
-    aiText = aiText.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
-    aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
-    aiText = aiText.replace(/\n/g, '<br>');
-    return aiText;
-  } catch (error) {
-    console.error('AI 摘要失败:', error);
-    return `AI 服务暂时不可用：${error.message}`;
-  }
+    
+    // 取最新的 15 篇（已按时间排序）
+    const latest = filteredArticles.slice(0, 15);
+    const articleList = latest.map((item, idx) => 
+        `${idx+1}. 标题：${item.title}\n   来源：${item.source}\n   链接：${item.link}`
+    ).join('\n');
+    
+    const systemPrompt = `你是一位专业的经济与国际关系研究助手。你的任务是：从用户提供的文章列表中，筛选出3-5篇最有价值的文章进行推荐。
+请严格遵守以下筛选标准：
+1. 文章内容必须至少涉及以下一个领域：
+   - 国际贸易（如：贸易协定、关税政策、供应链重构、WTO改革）
+   - 多边机构治理（如：IMF、世界银行、G20等机构的政策与改革）
+   - 宏观经济形势（如：全球及主要经济体的增长、通胀、就业趋势）
+   - 产业政策（如：各国的产业扶持、补贴、技术竞争策略）
+2. 优先推荐来自顶尖智库（如 Brookings, IMF, PIIE）或权威机构的深度分析。
+3. 优先关注时效性强、对未来走势有前瞻性判断的文章。
+4. 为每篇推荐的文章，用一两句话清晰说明推荐理由（直接点出其与以上话题的关联和价值）。
+
+最后，请以结构化的中文格式输出，示例如下：
+【推荐一】
+文章：标题
+理由：...
+链接：直接输出完整URL
+每篇之间空一行。不要输出额外解释。`;
+    
+    const userPrompt = `请分析以下文章，并严格遵循“研究助手”的指令进行推荐。\n${articleList}`;
+    
+    try {
+        const response = await fetch(AI_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${AI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'Qwen/Qwen3.5-4B',
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 800
+            })
+        });
+        if (!response.ok) {
+            const errText = await response.text();
+            throw new Error(`API 请求失败: ${response.status} - ${errText}`);
+        }
+        const data = await response.json();
+        let aiText = data.choices[0].message.content;
+        aiText = aiText.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>');
+        aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        aiText = aiText.replace(/\n/g, '<br>');
+        return aiText;
+    } catch (error) {
+        console.error('AI 摘要失败:', error);
+        return `AI 服务暂时不可用：${error.message}`;
+    }
 }
 
 function bindAIButton() {
-  const btn = document.getElementById('aiSummaryBtn');
-  const contentDiv = document.getElementById('aiSummaryContent');
-  if (!btn || !contentDiv) return;
-  btn.addEventListener('click', async () => {
-    if (state.allItems.length === 0) {
-      contentDiv.innerHTML = '⚠️ 暂无文章，请先点击“刷新内容”加载文章。';
-      return;
+    const btn = document.getElementById('aiSummaryBtn');
+    const contentDiv = document.getElementById('aiSummaryContent');
+    if (!btn || !contentDiv) return;
+    btn.addEventListener('click', async () => {
+        if (state.allItems.length === 0) {
+            contentDiv.innerHTML = '⚠️ 暂无文章，请先点击“刷新内容”加载文章。';
+            return;
+        }
+        contentDiv.innerHTML = '🤔 AI 正在分析指定智库的最新文章，请稍候...';
+        const summary = await getAISummary(state.allItems);
+        contentDiv.innerHTML = summary;
+    });
+}
+
+// ========== 加载推荐文章 ==========
+async function loadRecommendations() {
+    const container = document.getElementById('recommendationsList');
+    if (!container) return;
+    try {
+        const response = await fetch('recommendations.json');
+        if (!response.ok) throw new Error('推荐文章文件不存在');
+        const recs = await response.json();
+        if (recs.length === 0) {
+            container.innerHTML = '<p>暂无推荐，敬请期待。</p>';
+            return;
+        }
+        let html = '<div style="max-height: 400px; overflow-y: auto;">';
+        recs.forEach(rec => {
+            const proxyLink = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(rec.link))}`;
+            html += `
+                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                    <div style="font-weight: bold; margin-bottom: 4px;">
+                        <a href="${proxyLink}" target="_blank" style="text-decoration: none; color: #d35400;">📌 ${escapeHtml(rec.title)}</a>
+                    </div>
+                    <div style="font-size: 11px; color: #888; margin-bottom: 6px;">
+                        ${escapeHtml(rec.source)} · ${rec.date || ''}
+                        ${rec.tags ? ' · ' + rec.tags.map(t => '#' + escapeHtml(t)).join(' ') : ''}
+                    </div>
+                    <div style="font-size: 13px; color: #444; line-height: 1.4;">
+                        ${escapeHtml(rec.summary)}
+                    </div>
+                    <div style="margin-top: 6px;">
+                        <a href="${proxyLink}" target="_blank" style="font-size: 12px; color: #ff9800;">📖 通过代理阅读全文 →</a>
+                        &nbsp;|&nbsp;
+                        <a href="${escapeHtml(rec.link)}" target="_blank" style="font-size: 12px; color: #999;">🔗 原文（可能需VPN）</a>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (error) {
+        console.error('加载推荐文章失败:', error);
+        container.innerHTML = '<p>推荐文章加载失败，请检查 recommendations.json 是否存在。</p>';
     }
-    contentDiv.innerHTML = '🤔 AI 正在分析最新文章，请稍候...';
-    const summary = await getAISummary(state.allItems);
-    contentDiv.innerHTML = summary;
-  });
 }
 
 // ========== UI 绑定与初始化 ==========
 function bindUI() {
-  const refreshBtn = document.getElementById('refreshBtn');
-  if (refreshBtn) refreshBtn.addEventListener('click', () => refresh());
-  else console.error('找不到刷新按钮');
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => refresh());
+    else console.error('找不到刷新按钮');
 
-  const timeRadios = document.querySelectorAll('input[name="timeRange"]');
-  timeRadios.forEach(radio => {
-    radio.addEventListener('change', (e) => {
-      state.timeFilter = e.target.value;
-      applyFilters();
-      renderSourceList();
-      renderItems();
-      console.log(`时间筛选已更改为: ${state.timeFilter}`);
+    const timeRadios = document.querySelectorAll('input[name="timeRange"]');
+    timeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            state.timeFilter = e.target.value;
+            applyFilters();
+            renderSourceList();
+            renderItems();
+            console.log(`时间筛选已更改为: ${state.timeFilter}`);
+        });
     });
-  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('RSS 聚合器初始化中...');
-  bindUI();
-  bindAIButton();   // 如果不想用 AI，可以注释掉这一行
-  refresh();
+    console.log('RSS 聚合器初始化中...');
+    bindUI();
+    bindAIButton();   // 如果不想用 AI，可以注释掉这一行
+    refresh();
+    loadRecommendations();
 });
