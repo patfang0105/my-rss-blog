@@ -10,7 +10,7 @@ from urllib.parse import urljoin
 TARGET_SITES = [
     {
         "name": "Brookings",
-        "url": "https://www.brookings.edu/",
+        "url": "https://www.brookings.edu/?s=",
         "article_selector": "article",           # 通用
         "title_selector": "h2, h3",
         "link_selector": "a",
