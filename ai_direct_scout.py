@@ -9,12 +9,12 @@ from urllib.parse import urljoin
 # ================= 你要追踪的智库网站 =================
 TARGET_SITES = [
     {
-        "name": "Brookings",
-        "url": "https://www.brookings.edu/",
-        "article_selector": "article",
-        "title_selector": "h2, h3",
-        "link_selector": "a",
-        "date_selector": "time, .date, .published"
+       "name": "Brookings",
+    "url": "https://www.brookings.edu/",
+    "article_selector": "article.article",   # 更精确
+    "title_selector": "a",                   # 标题在 a 标签内
+    "link_selector": "a",
+    "date_selector": "time"                  # 日期可能在 <time> 标签
     },
     {
         "name": "Rhodium Group",
