@@ -477,44 +477,25 @@ async function loadRecommendations() {
     const container = document.getElementById('recommendationsList');
     if (!container) return;
     try {
-        const response = await fetch('recommendations.json');
-        if (!response.ok) throw new Error('推荐文章文件不存在');
-        const recs = await response.json();
-        if (recs.length === 0) {
-            container.innerHTML = '<p>暂无推荐，敬请期待。</p>';
-            return;
-        }
-        let html = '<div style="max-height: 400px; overflow-y: auto;">';
-        recs.forEach(rec => {
-            const proxyLink = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(rec.link))}`;
-            html += `
-                <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
-                    <div style="font-weight: bold; margin-bottom: 4px;">
-                        <a href="${proxyLink}" target="_blank" style="text-decoration: none; color: #d35400;">📌 ${escapeHtml(rec.title)}</a>
-                    </div>
-                    <div style="font-size: 11px; color: #888; margin-bottom: 6px;">
-                        ${escapeHtml(rec.source)} · ${rec.date || ''}
-                        ${rec.tags ? ' · ' + rec.tags.map(t => '#' + escapeHtml(t)).join(' ') : ''}
-                    </div>
-                    <div style="font-size: 13px; color: #444; line-height: 1.4;">
-                        ${escapeHtml(rec.summary)}
-                    </div>
-                    <div style="margin-top: 6px;">
-                        <a href="${proxyLink}" target="_blank" style="font-size: 12px; color: #ff9800;">📖 通过代理阅读全文 →</a>
-                        &nbsp;|&nbsp;
-                        <a href="${escapeHtml(rec.link)}" target="_blank" style="font-size: 12px; color: #999;">🔗 原文（可能需VPN）</a>
-                    </div>
-                </div>
-            `;
+        const resp = await fetch('recommendations.json?t=' + Date.now());
+        if (!resp.ok) throw new Error('文件不存在');
+        const data = await resp.json();
+        let aiText = data.ai_recommendations || '暂无推荐';
+        
+        // 将文本中的原始链接（https://...）转换为 Textise 代理链接
+        aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+            const proxyUrl = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(url))}`;
+            return `<a href="${proxyUrl}" target="_blank">${url}</a>`;
         });
-        html += '</div>';
-        container.innerHTML = html;
-    } catch (error) {
-        console.error('加载推荐文章失败:', error);
-        container.innerHTML = '<p>推荐文章加载失败，请检查 recommendations.json 是否存在。</p>';
+        
+        // 将换行符转换为 <br>
+        aiText = aiText.replace(/\n/g, '<br>');
+        container.innerHTML = aiText;
+    } catch(e) {
+        console.error('加载推荐失败:', e);
+        container.innerHTML = '加载推荐失败，请检查 recommendations.json 是否存在。';
     }
 }
-
 // ========== UI 绑定与初始化 ==========
 function bindUI() {
     const refreshBtn = document.getElementById('refreshBtn');
