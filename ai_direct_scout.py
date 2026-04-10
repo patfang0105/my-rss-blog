@@ -85,6 +85,9 @@ def fetch_articles(site):
                 "source": site["name"],
                 "date": pub_date
             })
+            print(f"  抓取到 {len(articles)} 篇文章，标题如下：")
+    for idx, art in enumerate(articles, 1):
+        print(f"    {idx}. {art['title']}")
         return articles
     except Exception as e:
         print(f"抓取 {site['name']} 失败: {e}")
