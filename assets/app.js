@@ -457,20 +457,20 @@ async function getAISummary(articles) {
     return `AI 服务暂时不可用，所有模型均调用失败。请检查网络连接或稍后重试。`;
 }
 
-function bindAIButton() {
-    const btn = document.getElementById('aiSummaryBtn');
-    const contentDiv = document.getElementById('aiSummaryContent');
-    if (!btn || !contentDiv) return;
-    btn.addEventListener('click', async () => {
-        if (state.allItems.length === 0) {
-            contentDiv.innerHTML = '⚠️ 暂无文章，请先点击“刷新内容”加载文章。';
-            return;
-        }
-        contentDiv.innerHTML = '🤔 AI 正在分析指定智库的最新文章，请稍候...';
-        const summary = await getAISummary(state.allItems);
-        contentDiv.innerHTML = summary;
-    });
-}
+//function bindAIButton() {
+    //const btn = document.getElementById('aiSummaryBtn');
+    //const contentDiv = document.getElementById('aiSummaryContent');
+    //if (!btn || !contentDiv) return;
+    //btn.addEventListener('click', async () => {
+        //if (state.allItems.length === 0) {
+            //contentDiv.innerHTML = '⚠️ 暂无文章，请先点击“刷新内容”加载文章。';
+            //return;
+        //}
+        //contentDiv.innerHTML = '🤔 AI 正在分析指定智库的最新文章，请稍候...';
+        //const summary = await getAISummary(state.allItems);
+        //contentDiv.innerHTML = summary;
+    //});
+//}
 
 // ========== 加载推荐文章 ==========
 async function loadRecommendations() {
@@ -518,7 +518,33 @@ function bindUI() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('RSS 聚合器初始化中...');
     bindUI();
-    bindAIButton();   // 如果不想用 AI，可以注释掉这一行
+    //bindAIButton();   // 如果不想用 AI，可以注释掉这一行
     refresh();
     loadRecommendations();
 });
+
+// ========== 加载 AI 精选推荐（读取 recommendations.json）==========
+async function loadRecommendations() {
+    const container = document.getElementById('recommendationsList');
+    if (!container) return;
+    try {
+        // 添加时间戳防止缓存
+        const resp = await fetch('recommendations.json?t=' + Date.now());
+        if (!resp.ok) throw new Error('文件不存在');
+        const data = await resp.json();
+        let aiText = data.ai_recommendations || '暂无推荐';
+        
+        // 将文本中的原始链接转换为 Textise 代理链接（可点击）
+        aiText = aiText.replace(/(https?:\/\/[^\s]+)/g, function(url) {
+            const proxyUrl = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(url))}`;
+            return `<a href="${proxyUrl}" target="_blank">${url}</a>`;
+        });
+        
+        // 将换行符转换为 HTML 换行
+        aiText = aiText.replace(/\n/g, '<br>');
+        container.innerHTML = aiText;
+    } catch(e) {
+        console.error('加载推荐失败:', e);
+        container.innerHTML = '暂无推荐，请稍后再试。';
+    }
+}
