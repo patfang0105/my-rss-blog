@@ -4,89 +4,87 @@ import json
 import os
 import re
 from datetime import datetime
+from urllib.parse import urljoin
 
-# ================= 在这里配置你要追踪的智库网站 =================
-# 每个网站需要填写：名称、网址、文章选择器（CSS选择器）
-# 文章选择器：右键点击网页上的文章标题 -> 检查元素，找到包裹文章的标签，例如 article、.post、.news-item 等
+# ================= 你要追踪的智库网站 =================
 TARGET_SITES = [
     {
         "name": "Brookings",
         "url": "https://www.brookings.edu/",
-        "article_selector": "article",  # 通用，大多数网站用 article 标签
+        "article_selector": "article",           # 通用
+        "title_selector": "h2, h3",
         "link_selector": "a",
-        "title_selector": "h2, h3"
+        "date_selector": "time, .date, .published"  # 尝试提取日期
     },
     {
         "name": "Rhodium Group",
         "url": "https://rhg.com/",
         "article_selector": "article",
+        "title_selector": "h2, h3",
         "link_selector": "a",
-        "title_selector": "h2, h3"
+        "date_selector": "time, .date"
     },
     {
         "name": "CSIS",
         "url": "https://www.csis.org/",
         "article_selector": "article",
+        "title_selector": "h2, h3",
         "link_selector": "a",
-        "title_selector": "h2, h3"
-    },
-    {
-        "name": "World Bank",
-        "url": "https://www.worldbank.org/en/news/all",
-        "article_selector": "div.news-item",  # 世界银行可能不同，可调整
-        "link_selector": "a",
-        "title_selector": "h3"
-    },
-    {
-        "name": "IMF",
-        "url": "https://www.imf.org/en/News",
-        "article_selector": "div.news-item",
-        "link_selector": "a",
-        "title_selector": "h3"
+        "date_selector": "time, .date"
     }
-    # 你可以继续添加更多网站，按照上面的格式
+    # 可以继续添加，按照相同格式
 ]
-# =============================================================
+# ====================================================
 
 def fetch_articles(site):
-    """抓取单个网站首页的文章标题和链接"""
+    """抓取网站，返回文章列表，每篇包含 title, link, source, date"""
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
         resp = requests.get(site["url"], headers=headers, timeout=15)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
         articles = []
-        
-        # 找到文章容器
         containers = soup.select(site["article_selector"])
-        for container in containers[:10]:  # 每个网站最多取10篇
+        
+        for container in containers[:12]:  # 每个网站最多12篇
             # 提取标题
             title_tag = container.select_one(site["title_selector"]) if site["title_selector"] else container.find(["h2", "h3"])
+            if not title_tag:
+                continue
+            title = title_tag.get_text(strip=True)
+            if len(title) < 5 or title.startswith("Menu"):
+                continue
+            
             # 提取链接
             link_tag = container.select_one(site["link_selector"]) if site["link_selector"] else container.find("a")
-            
-            if not title_tag or not link_tag:
+            if not link_tag or not link_tag.get("href"):
                 continue
-                
-            title = title_tag.get_text(strip=True)
-            link = link_tag.get("href")
-            if not link:
-                continue
-            # 处理相对链接
-            if link.startswith("/"):
-                base_url = site["url"].rstrip("/")
-                # 如果 base_url 包含路径，需要提取域名部分
-                from urllib.parse import urljoin
-                link = urljoin(site["url"], link)
+            link = urljoin(site["url"], link_tag["href"])
             
-            # 过滤掉太短的标题（可能是导航栏）
-            if title and len(title) > 5 and not title.startswith("Menu"):
-                articles.append({
-                    "title": title,
-                    "link": link,
-                    "source": site["name"],
-                    "date": datetime.now().strftime("%Y-%m-%d")
-                })
+            # 提取日期（如果有）
+            pub_date = ""
+            if "date_selector" in site and site["date_selector"]:
+                date_tag = container.select_one(site["date_selector"])
+                if date_tag:
+                    raw_date = date_tag.get_text(strip=True)
+                    # 尝试解析常见日期格式，例如 "Apr 10, 2025" 或 "2025-04-10"
+                    match = re.search(r'(\d{4}-\d{2}-\d{2})', raw_date)
+                    if not match:
+                        match = re.search(r'([A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})', raw_date)
+                    if match:
+                        pub_date = match.group(0)
+                    else:
+                        pub_date = raw_date[:20]  # 截取前20字符
+            # 如果没有提取到日期，使用今天的日期（表示“近期”）
+            if not pub_date:
+                pub_date = datetime.now().strftime("%Y-%m-%d")
+            
+            articles.append({
+                "title": title,
+                "link": link,
+                "source": site["name"],
+                "date": pub_date
+            })
         return articles
     except Exception as e:
         print(f"抓取 {site['name']} 失败: {e}")
@@ -97,9 +95,9 @@ def main():
     all_articles = []
     for site in TARGET_SITES:
         print(f"正在抓取: {site['name']}")
-        articles = fetch_articles(site)
-        print(f"  抓到 {len(articles)} 篇文章")
-        all_articles.extend(articles)
+        arts = fetch_articles(site)
+        print(f"  抓到 {len(arts)} 篇文章")
+        all_articles.extend(arts)
     
     if not all_articles:
         print("没有抓到任何文章，退出")
@@ -107,35 +105,33 @@ def main():
     
     print(f"总共抓取 {len(all_articles)} 篇文章，准备交给 AI 分析...")
     
-    # 构建发送给 AI 的文本（限制长度，避免 token 过多）
+    # 构建给 AI 的文本（包含标题、来源、日期、链接）
     article_text = ""
-    for idx, art in enumerate(all_articles[:30], 1):  # 最多30篇
-        article_text += f"{idx}. 标题：{art['title']}\n   来源：{art['source']}\n   链接：{art['link']}\n\n"
+    for idx, art in enumerate(all_articles[:30], 1):
+        article_text += f"{idx}. 标题：{art['title']}\n   来源：{art['source']}\n   日期：{art['date']}\n   链接：{art['link']}\n\n"
     
-    # 调用硅基流动 API
     api_key = os.environ.get("SILICONFLOW_API_KEY")
     if not api_key:
-        print("错误：未找到 SILICONFLOW_API_KEY 环境变量")
+        print("错误：未找到 SILICONFLOW_API_KEY")
         return
     
-    system_prompt = """你是一位专业的经济与国际关系研究助手。请根据以下标准，从用户提供的文章列表中筛选出最重要的 5-10 篇文章：
-1. 内容涉及国际贸易、多边机构治理、宏观经济形势、产业政策。
-2. 优先推荐来自顶尖智库（如 Brookings, CSIS, IMF, World Bank）的深度分析。
-3. 优先选择时效性强、对未来有前瞻性判断的文章。
+    system_prompt = """你是一位专业的经济与国际关系研究助手。请严格按照以下要求输出推荐：
 
-请严格按照下面的格式输出，不要输出任何额外内容：
+要求：
+1. 从用户提供的文章列表中，筛选出最重要的 3-5 篇文章。
+2. 必须包含以下领域：国际贸易、多边机构治理、宏观经济形势、产业政策。
+3. 输出格式必须严格如下（不要添加任何额外解释或标记）：
 
 【推荐一】
-文章：文章完整标题
+文章：完整标题
+日期：YYYY-MM-DD
 理由：一句话说明为什么值得读（必须指明涉及的具体话题）
 链接：原始链接
 
 【推荐二】
-文章：...
-理由：...
-链接：...
+...（以此类推）
 
-如果没有符合条件的文章，只输出：“未找到符合要求的高价值文章。”
+如果没有符合要求的文章，只输出：“未找到符合要求的高价值文章。”
 """
     
     user_prompt = f"请分析以下文章并推荐：\n{article_text}"
@@ -148,13 +144,13 @@ def main():
                 "Content-Type": "application/json"
             },
             json={
-                "model": "Qwen/Qwen2.5-72B-Instruct",  # 可换成 deepseek-ai/DeepSeek-V3
+                "model": "Qwen/Qwen2.5-72B-Instruct",
                 "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                "temperature": 0.3,
-                "max_tokens": 1000
+                "temperature": 0.2,   # 降低温度，让输出更稳定
+                "max_tokens": 1200
             },
             timeout=60
         )
@@ -162,9 +158,6 @@ def main():
         if response.status_code == 200:
             ai_result = response.json()["choices"][0]["message"]["content"]
             print("AI 分析完成")
-            
-            # 将 AI 返回的结果保存为 recommendations.json
-            # 为了与你现有的“编辑推荐”板块兼容，我们包装一下
             output = {
                 "last_update": datetime.now().isoformat(),
                 "ai_recommendations": ai_result
