@@ -404,7 +404,7 @@ async function getAISummary(articles) {
                 'Authorization': `Bearer ${AI_API_KEY}`
             },
             body: JSON.stringify({
-                model: 'deepseek-ai/DeepSeek-V3',
+                model: 'Qwen/Qwen2.5-72B-Instruct',
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userPrompt }
