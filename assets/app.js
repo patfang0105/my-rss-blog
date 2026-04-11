@@ -363,7 +363,7 @@ async function refresh() {
 
 // ========== AI 智能梳理（分析所有文章，不限制来源）==========
 // 请到 https://cloud.siliconflow.cn/ 注册，获取 API Key，替换下面的字符串
-const AI_API_KEY = '你的硅基流动API Key';   // 例如：sk-xxxxxxxxxxxxx
+const AI_API_KEY = 'sk-ahfjemfxrpxpgjozrzwmnmncxyuyhonqlepfllikksnwrand';   // 例如：sk-xxxxxxxxxxxxx
 const AI_API_URL = 'https://api.siliconflow.cn/v1/chat/completions';
 
 async function getAISummary(articles) {
