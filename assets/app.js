@@ -356,8 +356,10 @@ async function refresh() {
   } finally {
     state.isLoading = false;
     renderItems();
-    // 刷新完成后自动生成 AI 推荐
-    loadRecommendations();
+    // 文章加载完成后，调用 AI 推荐（延迟 500 毫秒确保 DOM 更新）
+    setTimeout(() => {
+        loadRecommendations();
+    }, 500);
   }
 }
 
@@ -474,5 +476,4 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('RSS 聚合器初始化中...');
   bindUI();
   refresh();               // 先加载文章
-  loadRecommendations();   // 自动生成 AI 推荐（refresh 完成后也会再调用一次，但无妨）
-});
+  });
