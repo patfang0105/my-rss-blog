@@ -2,35 +2,27 @@ name: AI Direct Scout
 
 on:
   schedule:
-    # 每天北京时间早上 8:00 和晚上 00:00 运行（UTC 时间 22:00 和 16:00）
-    - cron: '0 00 * * *'
-    - cron: '0 16 * * *'
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 00 * * *'   # 北京时间早上 8:00
+    - cron: '0 16 * * *'   # 北京时间晚上 00:00
+  workflow_dispatch:
 
 jobs:
   scout:
     runs-on: ubuntu-latest
     steps:
-      - name: 检出代码
-        uses: actions/checkout@v4
-
-      - name: 设置 Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
-      - name: 安装依赖
-        run: pip install requests beautifulsoup4
-
-      - name: 运行 AI 直接检索脚本
+      - run: pip install requests beautifulsoup4
+      - name: Run AI direct scout
         env:
           SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
         run: python ai_direct_scout.py
-
-      - name: 提交更新到仓库
+      - name: Commit updates
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
-          git add recommendations.json
-          git commit -m "AI 自动更新推荐文章 - $(date '+%Y-%m-%d %H:%M:%S')" || echo "没有新内容"
+          git add recommendations.json custom_feed.xml
+          git commit -m "AI 自动更新 - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes"
           git push
