@@ -15,7 +15,9 @@ const FEEDS = [
   "https://www.bu.edu/gdp/feed/",
   "https://think.ing.com/rss/",
   "https://www.economist.com/finance-and-economics/rss.xml",
-  "https://patfang0105.github.io/my-rss-blog/custom_feed.xml"  // 自定义爬虫生成的 RSS
+  "https://patfang0105.github.io/my-rss-blog/custom_feed.xml",  // 自定义爬虫生成的 RSS
+  "https://www.ft.com/china?format=rss",
+  "https://www.ft.com/opinion?format=rss"
 ];
 
 const state = {
