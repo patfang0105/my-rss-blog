@@ -15,7 +15,7 @@ const FEEDS = [
   "https://www.bu.edu/gdp/feed/",
   "https://think.ing.com/rss/",
   "https://www.economist.com/finance-and-economics/rss.xml",
-  "https://patfang0105.github.io/my-rss-blog/custom_feed.xml",  // 自定义爬虫生成的 RSS
+  "https://patfang0105.github.io/my-rss-blog/custom_feed.xml",
   "https://www.ft.com/china?format=rss",
   "https://www.ft.com/opinion?format=rss"
 ];
@@ -190,6 +190,15 @@ function escapeHtml(str) {
   });
 }
 
+// ========== 添加名称映射表 ==========
+const SOURCE_NAME_MAP = {
+    "China": "Financial Times - China",
+    "Opinion": "Financial Times - Opinion",
+    "Finance &amp; economics": "The Economist - Finance & economics",
+    "FA RSS":"Foreign Affairs",
+    // 后续可以在这里添加更多映射，格式："原始名称": "希望显示的名称",
+};
+
 function renderSourceList() {
   const container = document.getElementById('sourceListItems');
   if (!container) return;
@@ -204,10 +213,12 @@ function renderSourceList() {
     </a>
   </div>`;
   sources.forEach(source => {
+    // 使用映射后的名称，如果没有映射则使用原名
+    let displayName = SOURCE_NAME_MAP[source.name] || source.name;
     const isActive = (currentSource === source.name);
     html += `<div style="margin-bottom: 4px;">
       <a href="#" data-source="${escapeHtml(source.name)}" class="source-filter-link" style="display: block; padding: 6px 10px; background: ${isActive ? '#007acc' : 'transparent'}; color: ${isActive ? 'white' : '#333'}; text-decoration: none; border-radius: 6px; font-size: 13px;">
-        📄 ${escapeHtml(source.name)} <span style="float: right; opacity: 0.8;">${source.count}</span>
+        📄 ${escapeHtml(displayName)} <span style="float: right; opacity: 0.8;">${source.count}</span>
       </a>
     </div>`;
   });
@@ -358,16 +369,14 @@ async function refresh() {
   } finally {
     state.isLoading = false;
     renderItems();
-    // 文章加载完成后，调用 AI 推荐（延迟 500 毫秒确保 DOM 更新）
-    setTimeout(() => {
-        loadRecommendations();
-    }, 500);
+    // 刷新完成后自动生成 AI 推荐（延迟 500ms 确保 DOM 更新）
+    setTimeout(() => loadRecommendations(), 500);
   }
 }
 
 // ========== AI 智能梳理（分析所有文章，不限制来源）==========
 // 请到 https://cloud.siliconflow.cn/ 注册，获取 API Key，替换下面的字符串
-const AI_API_KEY = 'sk-ahfjemfxrpxpgjozrzwmnmncxyuyhonqlepfllikksnwrand';   // 例如：sk-xxxxxxxxxxxxx
+const AI_API_KEY = 'sk-ahfjemfxrpxpgjozrzwmnmncxyuyhonqlepfllikksnwrand';   // 请替换为你的真实 API Key
 const AI_API_URL = 'https://api.siliconflow.cn/v1/chat/completions';
 
 async function getAISummary(articles) {
@@ -386,7 +395,7 @@ async function getAISummary(articles) {
 筛选标准（满足任一即可）：
 - 涉及国际贸易、多边机构治理、宏观经济、产业政策
 - 涉及能源安全、技术竞争、地缘政治、供应链重组
-- 优先推荐深度分析或研究报告
+- 推荐深度分析或研究报告，不推荐Event等研讨会的内容
 
 输出格式（严格按此格式，不要输出额外内容）：
 【推荐一】
@@ -440,7 +449,6 @@ async function loadRecommendations() {
     const container = document.getElementById('recommendationsList');
     if (!container) return;
     
-    // 等待文章加载
     if (state.allItems.length === 0) {
         container.innerHTML = '暂无文章，请稍后刷新页面。';
         return;
@@ -477,5 +485,5 @@ function bindUI() {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('RSS 聚合器初始化中...');
   bindUI();
-  refresh();               // 先加载文章
-  });
+  refresh();               // 加载文章，完成后会自动调用 AI 推荐
+});
