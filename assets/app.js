@@ -17,7 +17,10 @@ const FEEDS = [
   "https://www.economist.com/finance-and-economics/rss.xml",
   "https://patfang0105.github.io/my-rss-blog/custom_feed.xml",
   "https://www.ft.com/china?format=rss",
-  "https://www.ft.com/opinion?format=rss"
+  "https://www.ft.com/opinion?format=rss",
+  "https://feeds.content.dowjones.io/public/rss/RSSOpinion",
+  "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
+  "https://feeds.bloomberg.com/markets/news.rss"
 ];
 
 const state = {
