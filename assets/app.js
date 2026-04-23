@@ -198,7 +198,8 @@ const SOURCE_NAME_MAP = {
     "Opinion": "Financial Times - Opinion",
     "Finance &amp; economics": "The Economist - Finance & economics",
     "FA RSS":"Foreign Affairs",
-    "AI 智库跟踪 - 自定义聚合":"CSIS & Brookings",
+    "AI 智库跟踪-自定义聚合":"CSIS & Brookings",
+    "RSSOpinion":"WSJ.com Opinion"
     // 后续可以在这里添加更多映射，格式："原始名称": "希望显示的名称",
 };
 
@@ -395,7 +396,7 @@ async function getAISummary(articles) {
     
     const systemPrompt = `你是一位专业的经济与国际关系研究助手。请从以下文章中筛选出最重要的 3-5 篇进行推荐。
 
-筛选标准：（符合下列条件之一即可）
+筛选标准：符合下列条件之一即可
 - 涉及国际贸易、多边机构治理、宏观经济、产业政策
 - 涉及能源安全、技术竞争、地缘政治、供应链重组
 - 推荐深度分析或研究报告，不推荐Event等研讨会的内容
