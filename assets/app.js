@@ -19,7 +19,8 @@ const FEEDS = [
   "https://www.ft.com/opinion?format=rss",
   "https://feeds.content.dowjones.io/public/rss/RSSOpinion",
   "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
-  "https://feeds.bloomberg.com/markets/news.rss"
+  "https://feeds.bloomberg.com/markets/news.rss",
+  "https://www.mckinsey.com/insights/rss"
 ];
 
 const state = {
