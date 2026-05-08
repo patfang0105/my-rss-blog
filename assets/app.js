@@ -20,7 +20,8 @@ const FEEDS = [
   "https://feeds.content.dowjones.io/public/rss/RSSOpinion",
   "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
   "https://feeds.bloomberg.com/markets/news.rss",
-  "https://www.mckinsey.com/insights/rss"
+  "https://www.mckinsey.com/insights/rss",
+  "https://www.chathamhouse.org/path/83/feed.xml"
 ];
 
 const state = {
