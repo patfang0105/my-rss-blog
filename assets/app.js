@@ -9,7 +9,6 @@ const FEEDS = [
   "https://www.foreignaffairs.com/rss.xml",
   "https://www.piie.com/rss/update.xml",
   "https://amro-asia.org/feed/",
-  "https://politepol.com/fd/X589A2bsRjn8.xml",
   "https://cepr.org/rss/vox-content",
   "https://www.bu.edu/gdp/feed/",
   "https://think.ing.com/rss/",
@@ -22,7 +21,8 @@ const FEEDS = [
   "https://feeds.bloomberg.com/markets/news.rss",
   "https://www.mckinsey.com/insights/rss",
   "https://www.chathamhouse.org/path/83/feed.xml",
-  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"
+  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
+  "https://www.oxfordeconomics.com/feed/"
 ];
 
 const state = {
