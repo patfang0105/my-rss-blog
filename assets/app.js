@@ -21,7 +21,8 @@ const FEEDS = [
   "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
   "https://feeds.bloomberg.com/markets/news.rss",
   "https://www.mckinsey.com/insights/rss",
-  "https://www.chathamhouse.org/path/83/feed.xml"
+  "https://www.chathamhouse.org/path/83/feed.xml",
+  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114"
 ];
 
 const state = {
