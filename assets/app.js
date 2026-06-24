@@ -23,7 +23,7 @@ const FEEDS = [
   "https://www.chathamhouse.org/path/83/feed.xml",
   "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
   "https://www.oxfordeconomics.com/feed/",
-  "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&facets=oecd-languages%3Aen&facets=oecd-content-types%3Apublications%2Freports&facets=oecd-content-types%3Apublications%2Fworking-papers&facets=oecd-content-types%3Apublications%2Fpolicy-papers"
+  "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen"
 ];
 
 const state = {
