@@ -496,7 +496,7 @@ function renderItems() {
     feedbackContainer.style.marginLeft = 'auto';
     feedbackContainer.style.alignItems = 'center';
 
-    // 从标题提取实词（用于自动生成关键词）
+    // 从标题提取实词（用于自动生成关键词建议）
     function extractKeywordsFromTitle(title) {
         const stopwords = ['的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '它', '她', '他', '们', '与', '或', '但', '而', '等', '及', '对', '从', '向', '以', '于', '之', '这', '那', '及', '于', '与'];
         const words = title.split(/[\s,，、：:;；.。!！?？"“”‘’'\-—]/);
@@ -513,25 +513,55 @@ function renderItems() {
     likeBtn.style.cursor = 'pointer';
     likeBtn.style.fontSize = '14px';
     likeBtn.style.padding = '2px 8px';
-    likeBtn.title = '我喜欢这篇文章，提取关键词';
+    likeBtn.title = '我喜欢这篇文章，添加偏好关键词';
     likeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const keywords = extractKeywordsFromTitle(item.title);
-        if (keywords.length === 0) {
-            alert('无法从标题提取有效关键词，请手动在偏好区域添加。');
-            return;
-        }
-        let added = 0;
-        keywords.forEach(kw => { if (addLikeKeyword(kw)) added++; });
-        if (added > 0) {
-            likeBtn.textContent = '✅';
-            likeBtn.style.borderColor = '#28a745';
-            likeBtn.style.background = '#d4edda';
-            alert(`已添加关键词：${keywords.join('、')}`);
-            renderPreferenceUI();
-        } else {
-            alert('这些关键词已经存在。');
-        }
+        const suggested = extractKeywordsFromTitle(item.title);
+        // 构建模态框让用户编辑关键词
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        const box = document.createElement('div');
+        box.style.cssText = 'background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;';
+        box.innerHTML = `
+            <h4 style="margin-top:0;">👍 添加偏好关键词</h4>
+            <p>请输入您关心的关键词（多个用逗号、顿号或空格分隔）：</p>
+            <input id="likeKeywordInput" type="text" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;" value="${suggested.join('、')}" placeholder="例如：贸易战, 供应链, 关税">
+            <div style="margin-top:12px;display:flex;gap:8px;">
+                <button id="confirmLikeBtn" class="rss-link" style="background:#28a745;padding:6px 15px;">确认</button>
+                <button id="cancelLikeBtn" class="rss-link" style="background:#6c757d;padding:6px 15px;">取消</button>
+            </div>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        document.getElementById('confirmLikeBtn').onclick = () => {
+            const input = document.getElementById('likeKeywordInput');
+            const raw = input.value.trim();
+            if (!raw) {
+                alert('请输入至少一个关键词。');
+                return;
+            }
+            const keywords = raw.split(/[，,、\s]+/).filter(k => k.length > 0);
+            if (keywords.length === 0) {
+                alert('请输入有效关键词。');
+                return;
+            }
+            let added = 0;
+            keywords.forEach(kw => { if (addLikeKeyword(kw)) added++; });
+            if (added > 0) {
+                likeBtn.textContent = '✅';
+                likeBtn.style.borderColor = '#28a745';
+                likeBtn.style.background = '#d4edda';
+                renderPreferenceUI();
+                alert(`已添加关键词：${keywords.join('、')}`);
+            } else {
+                alert('所有关键词已存在。');
+            }
+            overlay.remove();
+        };
+        document.getElementById('cancelLikeBtn').onclick = () => {
+            overlay.remove();
+        };
     });
 
     // 不喜欢按钮
@@ -546,22 +576,52 @@ function renderItems() {
     dislikeBtn.title = '我不喜欢这类文章，排除关键词';
     dislikeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const keywords = extractKeywordsFromTitle(item.title);
-        if (keywords.length === 0) {
-            alert('无法从标题提取有效关键词，请手动在偏好区域添加。');
-            return;
-        }
-        let added = 0;
-        keywords.forEach(kw => { if (addDislikeKeyword(kw)) added++; });
-        if (added > 0) {
-            dislikeBtn.textContent = '✅';
-            dislikeBtn.style.borderColor = '#dc3545';
-            dislikeBtn.style.background = '#f8d7da';
-            alert(`已排除关键词：${keywords.join('、')}`);
-            renderPreferenceUI();
-        } else {
-            alert('这些关键词已经在排除列表中。');
-        }
+        const suggested = extractKeywordsFromTitle(item.title);
+        // 构建模态框让用户编辑排除关键词
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999;';
+        const box = document.createElement('div');
+        box.style.cssText = 'background:white;border-radius:12px;padding:20px;max-width:500px;width:90%;';
+        box.innerHTML = `
+            <h4 style="margin-top:0;">👎 添加排除关键词</h4>
+            <p>请输入您不关心的关键词（多个用逗号、顿号或空格分隔）：</p>
+            <input id="dislikeKeywordInput" type="text" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;box-sizing:border-box;" value="${suggested.join('、')}" placeholder="例如：活动, 招聘, 公告">
+            <div style="margin-top:12px;display:flex;gap:8px;">
+                <button id="confirmDislikeBtn" class="rss-link" style="background:#dc3545;padding:6px 15px;">确认</button>
+                <button id="cancelDislikeBtn" class="rss-link" style="background:#6c757d;padding:6px 15px;">取消</button>
+            </div>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        document.getElementById('confirmDislikeBtn').onclick = () => {
+            const input = document.getElementById('dislikeKeywordInput');
+            const raw = input.value.trim();
+            if (!raw) {
+                alert('请输入至少一个关键词。');
+                return;
+            }
+            const keywords = raw.split(/[，,、\s]+/).filter(k => k.length > 0);
+            if (keywords.length === 0) {
+                alert('请输入有效关键词。');
+                return;
+            }
+            let added = 0;
+            keywords.forEach(kw => { if (addDislikeKeyword(kw)) added++; });
+            if (added > 0) {
+                dislikeBtn.textContent = '✅';
+                dislikeBtn.style.borderColor = '#dc3545';
+                dislikeBtn.style.background = '#f8d7da';
+                renderPreferenceUI();
+                alert(`已排除关键词：${keywords.join('、')}`);
+            } else {
+                alert('所有关键词已在排除列表中。');
+            }
+            overlay.remove();
+        };
+        document.getElementById('cancelDislikeBtn').onclick = () => {
+            overlay.remove();
+        };
     });
 
     feedbackContainer.appendChild(likeBtn);
