@@ -35,6 +35,155 @@ const state = {
 
 let currentSource = 'all';
 
+// ========== 个人偏好管理（localStorage）==========
+const MY_PREF_KEY = 'my_preferences';
+
+function getMyPreferences() {
+    try {
+        const data = localStorage.getItem(MY_PREF_KEY);
+        return data ? JSON.parse(data) : { keywords: [], exclude: [] };
+    } catch { return { keywords: [], exclude: [] }; }
+}
+
+function saveMyPreferences(pref) {
+    localStorage.setItem(MY_PREF_KEY, JSON.stringify(pref));
+}
+
+// 添加一个喜欢的关键词
+function addLikeKeyword(keyword) {
+    keyword = keyword.trim();
+    if (!keyword) return false;
+    const pref = getMyPreferences();
+    if (!pref.keywords.includes(keyword)) {
+        pref.keywords.push(keyword);
+        saveMyPreferences(pref);
+        renderPreferenceUI();
+        return true;
+    }
+    return false;
+}
+
+// 添加一个不喜欢的关键词（排除）
+function addDislikeKeyword(keyword) {
+    keyword = keyword.trim();
+    if (!keyword) return false;
+    const pref = getMyPreferences();
+    if (!pref.exclude.includes(keyword)) {
+        pref.exclude.push(keyword);
+        saveMyPreferences(pref);
+        renderPreferenceUI();
+        return true;
+    }
+    return false;
+}
+
+// 删除关键词
+function removePreferenceKeyword(type, keyword) {
+    const pref = getMyPreferences();
+    if (type === 'like') {
+        pref.keywords = pref.keywords.filter(k => k !== keyword);
+    } else if (type === 'exclude') {
+        pref.exclude = pref.exclude.filter(k => k !== keyword);
+    }
+    saveMyPreferences(pref);
+    renderPreferenceUI();
+}
+
+// 清空所有偏好
+function clearAllPreferences() {
+    saveMyPreferences({ keywords: [], exclude: [] });
+    renderPreferenceUI();
+}
+
+// 导出偏好（生成JSON文本供复制到preferences.json）
+function exportPreferences() {
+    const pref = getMyPreferences();
+    const json = JSON.stringify(pref, null, 2);
+    // 弹窗显示，方便复制
+    const textarea = document.createElement('textarea');
+    textarea.value = json;
+    textarea.style.width = '100%';
+    textarea.style.height = '150px';
+    textarea.style.padding = '8px';
+    textarea.style.boxSizing = 'border-box';
+    const container = document.createElement('div');
+    container.style.padding = '10px';
+    container.innerHTML = '<p style="margin-top:0;">复制以下 JSON 内容，然后粘贴到 GitHub 仓库的 <code>preferences.json</code> 文件中：</p>';
+    container.appendChild(textarea);
+    const btn = document.createElement('button');
+    btn.textContent = '复制到剪贴板';
+    btn.style.margin = '10px 0';
+    btn.className = 'rss-link';
+    btn.style.background = '#28a745';
+    btn.onclick = () => {
+        navigator.clipboard.writeText(json).then(() => {
+            alert('已复制！请前往 GitHub 粘贴到 preferences.json');
+        }).catch(() => {
+            // fallback
+            textarea.select();
+            document.execCommand('copy');
+            alert('已复制！请前往 GitHub 粘贴到 preferences.json');
+        });
+    };
+    container.appendChild(btn);
+    // 用模态框显示
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.5)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '9999';
+    const box = document.createElement('div');
+    box.style.background = 'white';
+    box.style.borderRadius = '12px';
+    box.style.padding = '20px';
+    box.style.maxWidth = '600px';
+    box.style.maxHeight = '80vh';
+    box.style.overflow = 'auto';
+    box.appendChild(container);
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '关闭';
+    closeBtn.style.marginTop = '10px';
+    closeBtn.className = 'rss-link';
+    closeBtn.style.background = '#6c757d';
+    closeBtn.onclick = () => overlay.remove();
+    box.appendChild(closeBtn);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+}
+
+// 渲染偏好UI
+function renderPreferenceUI() {
+    const container = document.getElementById('preferenceKeywords');
+    if (!container) return;
+    const pref = getMyPreferences();
+    const all = [...pref.keywords, ...pref.exclude.map(k => '🚫' + k)];
+    if (all.length === 0) {
+        container.innerHTML = '<span style="color: #999;">暂无偏好，点击文章下方的 👍 开始调教</span>';
+        return;
+    }
+    container.innerHTML = all.map(item => {
+        const isExclude = item.startsWith('🚫');
+        const kw = isExclude ? item.slice(2) : item;
+        const color = isExclude ? '#dc3545' : '#28a745';
+        return `<span style="background: ${color}20; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; border: 1px solid ${color};">
+            ${isExclude ? '👎' : '👍'} ${kw}
+            <span style="cursor: pointer; margin-left: 6px; color: #dc3545;" data-type="${isExclude ? 'exclude' : 'like'}" data-keyword="${kw}">✕</span>
+        </span>`;
+    }).join('');
+    // 绑定删除事件
+    container.querySelectorAll('span[data-keyword]').forEach(el => {
+        el.addEventListener('click', (e) => {
+            const type = e.target.getAttribute('data-type');
+            const kw = e.target.getAttribute('data-keyword');
+            removePreferenceKeyword(type, kw);
+        });
+    });
+}
+// ========== 偏好管理结束 ==========
+
 // ========== RSS 抓取部分（多代理）==========
 async function fetchFeed(url) {
   const PROXY_SERVICES = [
@@ -340,6 +489,86 @@ function renderItems() {
     proxyContainer.appendChild(fullTextBtn);
     proxyContainer.appendChild(originalBtn);
 
+    // ================= 添加反馈按钮（喜欢 / 不喜欢）=================
+    const feedbackContainer = document.createElement('div');
+    feedbackContainer.style.display = 'flex';
+    feedbackContainer.style.gap = '6px';
+    feedbackContainer.style.marginLeft = 'auto';
+    feedbackContainer.style.alignItems = 'center';
+
+    // 从标题提取实词（用于自动生成关键词）
+    function extractKeywordsFromTitle(title) {
+        const stopwords = ['的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '个', '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好', '自己', '这', '那', '它', '她', '他', '们', '与', '或', '但', '而', '等', '及', '对', '从', '向', '以', '于', '之', '这', '那', '及', '于', '与'];
+        const words = title.split(/[\s,，、：:;；.。!！?？"“”‘’'\-—]/);
+        const candidates = words.filter(w => w.length > 1 && !stopwords.includes(w) && !/^\d+$/.test(w));
+        return candidates.slice(0, 3);
+    }
+
+    // 喜欢按钮
+    const likeBtn = document.createElement('button');
+    likeBtn.textContent = '👍';
+    likeBtn.style.background = 'none';
+    likeBtn.style.border = '1px solid #28a745';
+    likeBtn.style.borderRadius = '4px';
+    likeBtn.style.cursor = 'pointer';
+    likeBtn.style.fontSize = '14px';
+    likeBtn.style.padding = '2px 8px';
+    likeBtn.title = '我喜欢这篇文章，提取关键词';
+    likeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const keywords = extractKeywordsFromTitle(item.title);
+        if (keywords.length === 0) {
+            alert('无法从标题提取有效关键词，请手动在偏好区域添加。');
+            return;
+        }
+        let added = 0;
+        keywords.forEach(kw => { if (addLikeKeyword(kw)) added++; });
+        if (added > 0) {
+            likeBtn.textContent = '✅';
+            likeBtn.style.borderColor = '#28a745';
+            likeBtn.style.background = '#d4edda';
+            alert(`已添加关键词：${keywords.join('、')}`);
+            renderPreferenceUI();
+        } else {
+            alert('这些关键词已经存在。');
+        }
+    });
+
+    // 不喜欢按钮
+    const dislikeBtn = document.createElement('button');
+    dislikeBtn.textContent = '👎';
+    dislikeBtn.style.background = 'none';
+    dislikeBtn.style.border = '1px solid #dc3545';
+    dislikeBtn.style.borderRadius = '4px';
+    dislikeBtn.style.cursor = 'pointer';
+    dislikeBtn.style.fontSize = '14px';
+    dislikeBtn.style.padding = '2px 8px';
+    dislikeBtn.title = '我不喜欢这类文章，排除关键词';
+    dislikeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const keywords = extractKeywordsFromTitle(item.title);
+        if (keywords.length === 0) {
+            alert('无法从标题提取有效关键词，请手动在偏好区域添加。');
+            return;
+        }
+        let added = 0;
+        keywords.forEach(kw => { if (addDislikeKeyword(kw)) added++; });
+        if (added > 0) {
+            dislikeBtn.textContent = '✅';
+            dislikeBtn.style.borderColor = '#dc3545';
+            dislikeBtn.style.background = '#f8d7da';
+            alert(`已排除关键词：${keywords.join('、')}`);
+            renderPreferenceUI();
+        } else {
+            alert('这些关键词已经在排除列表中。');
+        }
+    });
+
+    feedbackContainer.appendChild(likeBtn);
+    feedbackContainer.appendChild(dislikeBtn);
+    proxyContainer.appendChild(feedbackContainer);
+    // ================= 反馈按钮结束 =================
+
     card.appendChild(title);
     card.appendChild(meta);
     if (desc.textContent) card.appendChild(desc);
@@ -398,6 +627,17 @@ async function getAISummary(articles) {
         `${idx+1}. 标题：${item.title}\n   来源：${item.source || '未知'}\n   日期：${item.pubDate || ''}\n   链接：${item.link}`
     ).join('\n');
     
+    // ========== 获取个人偏好，融入推荐 ==========
+    const myPref = getMyPreferences();
+    let preferenceHint = '';
+    if (myPref.keywords.length > 0) {
+        preferenceHint = `\n\n用户特别关注以下话题：${myPref.keywords.join('、')}。在筛选时请优先考虑与这些话题相关的文章。`;
+    }
+    if (myPref.exclude.length > 0) {
+        preferenceHint += `\n\n同时，请尽量避免推荐明显涉及以下内容的文章：${myPref.exclude.join('、')}。`;
+    }
+    // ===========================================
+
     const systemPrompt = `你是一位专业的经济与国际关系研究助手。请从以下文章中筛选出最重要的 3-5 篇进行推荐。
 
 筛选标准：符合下列条件之一即可
@@ -405,6 +645,8 @@ async function getAISummary(articles) {
 - 涉及能源安全、技术竞争、地缘政治、供应链重组
 - 推荐深度分析或研究报告，不推荐Event等研讨会的内容
 - 推荐发布时间为最近一周以内的更新
+
+${preferenceHint}
 
 输出格式（严格按此格式，不要输出额外内容）：
 【推荐一】
@@ -495,4 +737,5 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('RSS 聚合器初始化中...');
   bindUI();
   refresh();               // 加载文章，完成后会自动调用 AI 推荐
+  renderPreferenceUI();    // 显示偏好管理界面
 });
