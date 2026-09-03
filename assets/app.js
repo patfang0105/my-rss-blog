@@ -23,7 +23,11 @@ const FEEDS = [
   "https://www.chathamhouse.org/path/83/feed.xml",
   "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
   "https://www.oxfordeconomics.com/feed/",
-  "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen"
+  "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen",
+  "https://kill-the-newsletter.com/feeds/h51uj1qrka13lel7jfvj.xml",
+  "https://kill-the-newsletter.com/feeds/fz85qbrcrtd4ka2iukg9.xml",
+  "https://kill-the-newsletter.com/feeds/k7hkvb3zqarpzkm271ba.xml",
+  "https://kill-the-newsletter.com/feeds/fli2m1wthbxvdarcsltq.xml"
 ];
 
 const state = {
