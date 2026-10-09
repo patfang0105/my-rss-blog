@@ -26,9 +26,9 @@ const FEEDS = [
   "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen",
   "https://kill-the-newsletter.com/feeds/h51uj1qrka13lel7jfvj.xml",
   "https://kill-the-newsletter.com/feeds/fz85qbrcrtd4ka2iukg9.xml",
-  "https://kill-the-newsletter.com/feeds/k7hkvb3zqarpzkm271ba.xml",
+  "https://rss.app/feeds/hHWon0umvxdjhouR.xml",
   "https://kill-the-newsletter.com/feeds/fli2m1wthbxvdarcsltq.xml",
-  "https://kill-the-newsletter.com/feeds/3e9tv7gzznjb93be3ndd.xml"
+  "https://rss.app/feeds/v0VR4ZPj5fTGqlK9.xml"
 ];
 
 const state = {
