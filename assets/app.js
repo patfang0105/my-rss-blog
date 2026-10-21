@@ -1,5 +1,5 @@
 // 简易前端聚合器：合并多个 RSS 源并展示
-// 优化了多代理服务，提高抓取稳定性
+// 优化了多代理服务，优先使用专属 Cloudflare Worker 代理
 
 const FEEDS = [
   "https://www.atlanticcouncil.org/feed/",
@@ -42,39 +42,24 @@ let currentSource = 'all';
 
 // ========== RSS 抓取部分（多代理）==========
 async function fetchFeed(url) {
-  // 优化了代理列表，将更稳定的代理放在前面
   const PROXY_SERVICES = [
     {
+      name: 'my-worker',
+      // 你的专属 Cloudflare Worker 代理
+      endpoint: (url) => `https://yellow-salad-c6f4.fangxiaoyuan.workers.dev/?url=${encodeURIComponent(url)}`,
+      parser: (text) => parseRSSText(text, url)
+    },
+    {
       name: 'codetabs',
+      // 备用代理 1
       endpoint: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
       parser: (text) => parseRSSText(text, url)
     },
     {
       name: 'corsproxy',
+      // 备用代理 2
       endpoint: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
       parser: (text) => parseRSSText(text, url)
-    },
-    {
-      name: 'isomorphic-git',
-      endpoint: (url) => `https://cors.isomorphic-git.org/${url}`,
-      parser: (text) => parseRSSText(text, url)
-    },
-    {
-      name: 'allorigins',
-      endpoint: (url) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      parser: (text) => parseRSSText(text, url)
-    },
-    {
-      name: 'rss2json',
-      endpoint: (url) => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
-      parser: (data) => data.items.map(it => ({
-        title: it.title || '无标题',
-        link: it.link || '#',
-        author: it.author || '',
-        pubDate: it.pubDate || it.pubdate || it.date || '',
-        description: it.description || '',
-        source: data.feed && data.feed.title ? data.feed.title : url,
-      }))
     }
   ];
 
@@ -93,11 +78,11 @@ async function fetchFeed(url) {
       if (!data) continue;
       const items = proxy.parser(data);
       if (items && items.length > 0) {
-        console.log(`✓ 使用 ${proxy.name} 成功获取 ${url}`);
+        // console.log(`✓ 使用 ${proxy.name} 成功获取 ${url}`);
         return items;
       }
     } catch (e) {
-      console.warn(`${proxy.name} 代理失败:`, e.message);
+      // console.warn(`${proxy.name} 代理失败:`, e.message);
       continue;
     }
   }
@@ -210,7 +195,6 @@ const SOURCE_NAME_MAP = {
     "FA RSS":"Foreign Affairs",
     "AI 智库跟踪-自定义聚合":"CSIS & Brookings",
     "RSSOpinion":"WSJ.com Opinion"
-    // 可以在这里继续添加映射
 };
 
 function renderSourceList() {
