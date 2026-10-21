@@ -1,0 +1,32 @@
+name: Update RSS Data
+
+on:
+  schedule:
+    - cron: '0 0,8,16 * * *' 
+  workflow_dispatch: 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          
+      - name: 安装依赖
+        run: pip install feedparser
+        
+      - name: 运行抓取脚本
+        run: python fetch_rss.py
+        
+      - name: 提交更新
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add rss-data.json
+          git commit -m "自动更新 RSS 数据 $(date '+%Y-%m-%d %H:%M')" || echo "无新数据"
+          git push
