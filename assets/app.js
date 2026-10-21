@@ -1,36 +1,3 @@
-// 简易前端聚合器：合并多个 RSS 源并展示
-// 优化了多代理服务，优先使用专属 Cloudflare Worker 代理
-
-const FEEDS = [
-  "https://www.atlanticcouncil.org/feed/",
-  "http://project-syndicate.org/rss",
-  "https://www.aei.org/feed/",
-  "https://www.wto.org/library/rss/latest_news_e.xml",
-  "https://www.foreignaffairs.com/rss.xml",
-  "https://www.piie.com/rss/update.xml",
-  "https://amro-asia.org/feed/",
-  "https://cepr.org/rss/vox-content",
-  "https://www.bu.edu/gdp/feed/",
-  "https://think.ing.com/rss/",
-  "https://www.economist.com/finance-and-economics/rss.xml",
-  "https://patfang0105.github.io/my-rss-blog/custom_feed.xml",
-  "https://www.ft.com/china?format=rss",
-  "https://www.ft.com/opinion?format=rss",
-  "https://feeds.content.dowjones.io/public/rss/RSSOpinion",
-  "https://feeds.content.dowjones.io/public/rss/RSSWorldNews",
-  "https://feeds.bloomberg.com/markets/news.rss",
-  "https://www.mckinsey.com/insights/rss",
-  "https://www.chathamhouse.org/path/83/feed.xml",
-  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
-  "https://www.oxfordeconomics.com/feed/",
-  "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen",
-  "https://kill-the-newsletter.com/feeds/h51uj1qrka13lel7jfvj.xml",
-  "https://kill-the-newsletter.com/feeds/fz85qbrcrtd4ka2iukg9.xml",
-  "https://rss.app/feeds/hHWon0umvxdjhouR.xml",
-  "https://kill-the-newsletter.com/feeds/fli2m1wthbxvdarcsltq.xml",
-  "https://rss.app/feeds/v0VR4ZPj5fTGqlK9.xml"
-];
-
 const state = {
   items: [],
   allItems: [],
@@ -40,90 +7,19 @@ const state = {
 
 let currentSource = 'all';
 
-// ========== RSS 抓取部分（多代理）==========
-async function fetchFeed(url) {
-  const PROXY_SERVICES = [
-    {
-      name: 'my-worker',
-      // 你的专属 Cloudflare Worker 代理
-      endpoint: (url) => `https://yellow-salad-c6f4.fangxiaoyuan.workers.dev/?url=${encodeURIComponent(url)}`,
-      parser: (text) => parseRSSText(text, url)
-    },
-    {
-      name: 'codetabs',
-      // 备用代理 1
-      endpoint: (url) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-      parser: (text) => parseRSSText(text, url)
-    },
-    {
-      name: 'corsproxy',
-      // 备用代理 2
-      endpoint: (url) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      parser: (text) => parseRSSText(text, url)
-    }
-  ];
-
-  for (const proxy of PROXY_SERVICES) {
-    try {
-      const endpoint = proxy.endpoint(url);
-      const res = await fetch(endpoint, { timeout: 10000 });
-      if (!res.ok) continue;
-      const contentType = res.headers.get('content-type') || '';
-      let data;
-      if (contentType.includes('application/json')) {
-        data = await res.json();
-      } else {
-        data = await res.text();
-      }
-      if (!data) continue;
-      const items = proxy.parser(data);
-      if (items && items.length > 0) {
-        // console.log(`✓ 使用 ${proxy.name} 成功获取 ${url}`);
-        return items;
-      }
-    } catch (e) {
-      // console.warn(`${proxy.name} 代理失败:`, e.message);
-      continue;
-    }
-  }
-  console.error(`所有代理都失败，无法获取 ${url}`);
-  return [];
-}
-
-function parseRSSText(xmlText, sourceUrl) {
+// 直接读取同目录下的静态 JSON 文件
+async function fetchData() {
   try {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
-    const parserError = xmlDoc.querySelector('parsererror');
-    if (parserError) return [];
-    const items = [];
-    const channel = xmlDoc.querySelector('channel');
-    const feedTitle = channel?.querySelector('title')?.textContent || sourceUrl;
-    const entries = xmlDoc.querySelectorAll('item, entry');
-    entries.forEach(entry => {
-      const title = entry.querySelector('title')?.textContent || '无标题';
-      const link = entry.querySelector('link')?.textContent || 
-                   entry.querySelector('link')?.getAttribute('href') || '#';
-      const author = entry.querySelector('author, creator, dc\\:creator')?.textContent || '';
-      const pubDate = entry.querySelector('pubDate, published, updated')?.textContent || '';
-      const description = entry.querySelector('description, summary, content')?.textContent || '';
-      items.push({
-        title: title.trim(),
-        link: link.trim(),
-        author: author.trim(),
-        pubDate: pubDate.trim(),
-        description: description.trim(),
-        source: feedTitle
-      });
-    });
-    return items;
+    const response = await fetch('rss-data.json?t=' + Date.now());
+    if (!response.ok) throw new Error('数据文件还未生成');
+    const data = await response.json();
+    return data;
   } catch (e) {
-    console.error('解析 RSS 文本失败:', e);
+    console.error('加载数据失败:', e);
     return [];
   }
 }
 
-// ========== 筛选与渲染核心 ==========
 function applyFilters() {
   let filtered = state.allItems;
   const now = Date.now();
@@ -132,20 +28,11 @@ function applyFilters() {
   const month = 30 * hour24;
 
   if (state.timeFilter === '24h') {
-    filtered = filtered.filter(item => {
-      const itemDate = new Date(item.pubDate || 0).getTime();
-      return now - itemDate <= hour24;
-    });
+    filtered = filtered.filter(item => now - new Date(item.pubDate || 0).getTime() <= hour24);
   } else if (state.timeFilter === 'week') {
-    filtered = filtered.filter(item => {
-      const itemDate = new Date(item.pubDate || 0).getTime();
-      return now - itemDate <= week;
-    });
+    filtered = filtered.filter(item => now - new Date(item.pubDate || 0).getTime() <= week);
   } else if (state.timeFilter === 'month') {
-    filtered = filtered.filter(item => {
-      const itemDate = new Date(item.pubDate || 0).getTime();
-      return now - itemDate <= month;
-    });
+    filtered = filtered.filter(item => now - new Date(item.pubDate || 0).getTime() <= month);
   }
 
   if (currentSource !== 'all') {
@@ -187,7 +74,6 @@ function escapeHtml(str) {
   });
 }
 
-// ========== 名称映射表 ==========
 const SOURCE_NAME_MAP = {
     "China": "Financial Times - China",
     "Opinion": "Financial Times - Opinion",
@@ -244,7 +130,7 @@ function renderItems() {
     if (state.allItems.length > 0) {
       container.innerHTML = '<p>当前筛选条件下没有文章，请调整筛选条件。</p>';
     } else {
-      container.innerHTML = '<p>暂无内容，请点击刷新按钮加载文章。</p>';
+      container.innerHTML = '<p>暂无内容。如果是首次部署，请去 Actions 页面手动运行一次脚本。</p>';
     }
     return;
   }
@@ -265,7 +151,6 @@ function renderItems() {
     title.style.fontWeight = 'bold';
     title.style.textDecoration = 'none';
     title.style.color = '#333';
-    title.title = '直接访问（可能需要 VPN）';
 
     const meta = document.createElement('div');
     meta.style.color = '#666';
@@ -273,11 +158,8 @@ function renderItems() {
     let metaText = item.source || '';
     if (item.author) metaText += ' · ' + item.author;
     if (item.pubDate) {
-      try {
-        metaText += ' · ' + new Date(item.pubDate).toLocaleString('zh-CN');
-      } catch {
-        metaText += ' · ' + item.pubDate;
-      }
+      try { metaText += ' · ' + new Date(item.pubDate).toLocaleString('zh-CN'); } 
+      catch { metaText += ' · ' + item.pubDate; }
     }
     meta.textContent = metaText;
 
@@ -294,37 +176,18 @@ function renderItems() {
     proxyContainer.style.marginTop = '8px';
     proxyContainer.style.display = 'flex';
     proxyContainer.style.gap = '8px';
-    proxyContainer.style.flexWrap = 'wrap';
-    proxyContainer.style.alignItems = 'center';
 
-    // Textise 代理阅读按钮
     const fullTextBtn = document.createElement('a');
     fullTextBtn.href = `https://www.textise.net/showText.aspx?strURL=${encodeURIComponent(encodeURIComponent(item.link))}`;
     fullTextBtn.target = '_blank';
     fullTextBtn.textContent = '📖 阅读全文（Textise）';
-    fullTextBtn.style.display = 'inline-block';
-    fullTextBtn.style.padding = '4px 12px';
-    fullTextBtn.style.background = '#ff5722';
-    fullTextBtn.style.color = 'white';
-    fullTextBtn.style.textDecoration = 'none';
-    fullTextBtn.style.borderRadius = '4px';
-    fullTextBtn.style.fontSize = '12px';
-    fullTextBtn.style.fontWeight = 'bold';
-    fullTextBtn.style.cursor = 'pointer';
-    fullTextBtn.title = '通过 Textise 代理阅读全文（免VPN）';
+    fullTextBtn.style.cssText = 'padding: 4px 12px; background: #ff5722; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;';
 
     const originalBtn = document.createElement('a');
     originalBtn.href = item.link;
     originalBtn.target = '_blank';
     originalBtn.textContent = '🔗 原文';
-    originalBtn.style.display = 'inline-block';
-    originalBtn.style.padding = '4px 12px';
-    originalBtn.style.background = '#607d8b';
-    originalBtn.style.color = 'white';
-    originalBtn.style.textDecoration = 'none';
-    originalBtn.style.borderRadius = '4px';
-    originalBtn.style.fontSize = '12px';
-    originalBtn.title = '直接访问原网站（可能需要VPN）';
+    originalBtn.style.cssText = 'padding: 4px 12px; background: #607d8b; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;';
 
     proxyContainer.appendChild(fullTextBtn);
     proxyContainer.appendChild(originalBtn);
@@ -342,38 +205,23 @@ async function refresh() {
   state.isLoading = true;
   renderItems();
   try {
-    console.log('开始刷新 RSS 源...');
-    const all = await Promise.allSettled(FEEDS.map(fetchFeed));
-    const merged = [];
-    for (const r of all) {
-      if (r.status === 'fulfilled') merged.push(...r.value);
-      else console.warn('某个订阅源抓取失败:', r.reason);
-    }
-    merged.sort((a, b) => {
-      const dateA = new Date(a.pubDate || 0);
-      const dateB = new Date(b.pubDate || 0);
-      return dateB - dateA;
-    });
-    state.allItems = merged;
+    const data = await fetchData();
+    state.allItems = data;
     currentSource = 'all';
     applyFilters();
     renderSourceList();
     renderItems();
-    console.log(`成功加载 ${merged.length} 篇文章`);
   } catch (e) {
-    console.error('刷新时出错:', e);
-    alert('刷新失败，请查看浏览器控制台了解详情');
+    console.error(e);
   } finally {
     state.isLoading = false;
     renderItems();
   }
 }
 
-// ========== UI 绑定与初始化 ==========
 function bindUI() {
   const refreshBtn = document.getElementById('refreshBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', () => refresh());
-  else console.error('找不到刷新按钮');
 
   const timeRadios = document.querySelectorAll('input[name="timeRange"]');
   timeRadios.forEach(radio => {
@@ -382,13 +230,11 @@ function bindUI() {
       applyFilters();
       renderSourceList();
       renderItems();
-      console.log(`时间筛选已更改为: ${state.timeFilter}`);
     });
   });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('RSS 聚合器初始化中...');
   bindUI();
-  refresh(); // 加载文章
+  refresh(); 
 });
