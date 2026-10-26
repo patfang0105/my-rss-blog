@@ -206,7 +206,15 @@ async function refresh() {
   renderItems();
   try {
     const data = await fetchData();
-    state.allItems = data;
+    
+    // 🔥 强制按真实时间戳降序排列，确保最新的文章在最前面
+    data.sort((a, b) => {
+      const timeA = new Date(a.pubDate || 0).getTime();
+      const timeB = new Date(b.pubDate || 0).getTime();
+      return timeB - timeA; 
+    });
+
+    state.allItems = data; // 只赋值这一次就好
     currentSource = 'all';
     applyFilters();
     renderSourceList();
@@ -218,7 +226,6 @@ async function refresh() {
     renderItems();
   }
 }
-
 function bindUI() {
   const refreshBtn = document.getElementById('refreshBtn');
   if (refreshBtn) refreshBtn.addEventListener('click', () => refresh());
