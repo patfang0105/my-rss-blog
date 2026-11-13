@@ -2,6 +2,7 @@ import feedparser
 import json
 import os
 from datetime import datetime
+from fetch_imf_ilo import fetch_imf_ilo_items
 
 FEEDS = [
   "https://www.atlanticcouncil.org/feed/",
@@ -34,7 +35,7 @@ def fetch_all_feeds():
         try:
             feed = feedparser.parse(url)
             source_name = feed.feed.get('title', url)
-            
+
             for entry in feed.entries[:30]:
                 all_items.append({
                     "title": entry.get('title', '无标题'),
@@ -47,16 +48,27 @@ def fetch_all_feeds():
             print(f"✅ 成功抓取: {source_name}")
         except Exception as e:
             print(f"❌ 抓取失败: {url} - {str(e)}")
-    
+
+    # ══════════════════════════════════════════════════════
+    #  新增：抓取 IMF 与 ILO（这两家没有官方 RSS，走专用脚本，
+    #  详见 fetch_imf_ilo.py）。失败不影响主流程。
+    # ══════════════════════════════════════════════════════
+    try:
+        extra = fetch_imf_ilo_items()
+        all_items.extend(extra)
+        print(f"✅ IMF/ILO 专用抓取: 共 {len(extra)} 篇")
+    except Exception as e:
+        print(f"❌ IMF/ILO 专用抓取失败（不影响其他源）: {e}")
+
     seen = set()
     unique_items = []
     for item in all_items:
         if item['link'] not in seen:
             seen.add(item['link'])
             unique_items.append(item)
-            
+
     unique_items.sort(key=lambda x: x['pubDate'], reverse=True)
-    
+
     with open('rss-data.json', 'w', encoding='utf-8') as f:
         json.dump(unique_items, f, ensure_ascii=False, indent=2)
     print(f"🎉 成功汇总 {len(unique_items)} 篇文章到 rss-data.json")
