@@ -2,8 +2,8 @@ name: Update RSS Data
 
 on:
   schedule:
-    - cron: '0 0,8,16 * * *' 
-  workflow_dispatch: 
+    - cron: '0 0,8,16 * * *'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -11,18 +11,23 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
-        
+
       - name: 设置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          
+
       - name: 安装依赖
-        run: pip install feedparser
-        
+        run: pip install feedparser requests beautifulsoup4 playwright
+
+      # IMF 官网会拦截数据中心 IP 且页面靠 JS 加载，装一个无头浏览器做兜底。
+      # 装失败也不影响任务继续（脚本会自动降级到 Google News 兜底）。
+      - name: 安装无头浏览器（IMF 兜底用，失败可跳过）
+        run: python -m playwright install chromium --with-deps || python -m playwright install chromium || echo "⚠ 浏览器未装成，IMF 将走 Google News 兜底"
+
       - name: 运行抓取脚本
         run: python fetch_rss.py
-        
+
       - name: 提交更新
         run: |
           git config user.name "GitHub Actions Bot"
