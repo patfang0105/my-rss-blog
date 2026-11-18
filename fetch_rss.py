@@ -1,7 +1,9 @@
 import feedparser
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+
 from fetch_imf_ilo import fetch_imf_ilo_items
 
 FEEDS = [
@@ -30,6 +32,23 @@ FEEDS = [
   "https://www.scmp.com/rss/328461/feed"
 ]
 
+
+def _pub_ts(item):
+    """把 RSS 的 pubDate 字符串（如 "Tue, 17 Nov 2026 12:59:46 +0000"）
+    解析成真正的时间对象，供排序使用。
+
+    注意：绝对不能直接对字符串排序——字符串比较会先比 "Tue"/"Wed" 这些
+    星期名，导致 10 月的稿排到 11 月前面，同一星期几的稿全部挤在一起。
+    """
+    try:
+        dt = parsedate_to_datetime(item.get("pubDate") or "")
+    except (TypeError, ValueError, AttributeError):
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def fetch_all_feeds():
     all_items = []
     for url in FEEDS:
@@ -38,29 +57,35 @@ def fetch_all_feeds():
             source_name = feed.feed.get('title', url)
 
             for entry in feed.entries[:30]:
+                title = entry.get('title', '无标题')
+                link = entry.get('link', '#')
+                if not title or link == '#':
+                    continue
                 all_items.append({
-                    "title": entry.get('title', '无标题'),
-                    "link": entry.get('link', '#'),
+                    "title": title,
+                    "link": link,
                     "pubDate": entry.get('published', entry.get('updated', '')),
                     "author": entry.get('author', ''),
                     "description": entry.get('summary', ''),
                     "source": source_name
                 })
-            print(f"✅ 成功抓取: {source_name}")
+            print(f"✅ 成功抓取: {source_name}（{len(feed.entries[:30])} 条）")
         except Exception as e:
             print(f"❌ 抓取失败: {url} - {str(e)}")
 
     # ══════════════════════════════════════════════════════
-    #  新增：抓取 IMF 与 ILO（这两家没有官方 RSS，走专用脚本，
-    #  详见 fetch_imf_ilo.py）。失败不影响主流程。
+    #  IMF / ILO / 世界银行 / UNCTAD 专用抓取
+    #  这四家没有可用的官方 RSS，统一由 fetch_imf_ilo.py 处理。
+    #  失败不影响主流程，其余源照常输出。
     # ══════════════════════════════════════════════════════
     try:
         extra = fetch_imf_ilo_items()
         all_items.extend(extra)
-        print(f"✅ IMF/ILO 专用抓取: 共 {len(extra)} 篇")
+        print(f"✅ 机构专用抓取（IMF/ILO/世行/UNCTAD）: 共 {len(extra)} 篇")
     except Exception as e:
-        print(f"❌ IMF/ILO 专用抓取失败（不影响其他源）: {e}")
+        print(f"❌ 机构专用抓取失败（不影响其他源）: {e}")
 
+    # 按链接去重
     seen = set()
     unique_items = []
     for item in all_items:
@@ -68,11 +93,13 @@ def fetch_all_feeds():
             seen.add(item['link'])
             unique_items.append(item)
 
-    unique_items.sort(key=lambda x: x['pubDate'], reverse=True)
+    # 按真实时间倒序（修复原来按字符串排序导致的乱序）
+    unique_items.sort(key=_pub_ts, reverse=True)
 
     with open('rss-data.json', 'w', encoding='utf-8') as f:
         json.dump(unique_items, f, ensure_ascii=False, indent=2)
     print(f"🎉 成功汇总 {len(unique_items)} 篇文章到 rss-data.json")
+
 
 if __name__ == "__main__":
     fetch_all_feeds()
