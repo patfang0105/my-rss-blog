@@ -260,7 +260,6 @@ def fetch_unctad():
 
 
 # ──────────────────────────  世界银行 World Bank  ──────────────────────────
-
 def _wb_items_from_html(html: str):
     """从世行新闻列表页（/ext/en/news）解析条目。标题日期链接三要素齐全。"""
     if not HAS_BS4:
@@ -359,6 +358,138 @@ def fetch_worldbank():
     items = _google_news_items("worldbank.org", "世界银行 World Bank")
     print(f"   {'✅ Google News 兜底：' + str(len(items)) + ' 条' if items else '❌ 世行两条通道均未取到'}")
     return items
+
+
+# ────────────  世界银行知识库 OKR（开放知识仓储，研究报告库）  ────────────
+# 站点：https://openknowledge.worldbank.org/search  （DSpace 7）
+# 该站没有 RSS，但提供了两个机器接口：
+#   ① REST API（首选，JSON）：/server/api/discover/search/objects?sort=dc.date.issued,DESC
+#   ② OAI-PMH（兜底，XML）：/server/oai/request?verb=ListRecords&metadataPrefix=oai_dc
+OKR_API = "https://openknowledge.worldbank.org/server/api/discover/search/objects"
+OKR_OAI = "https://openknowledge.worldbank.org/server/oai/request"
+OKR_SKIP_TITLE = ("country opinion survey", "world bank group directory")
+OKR_DATE_RE = re.compile(r"(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?")
+
+
+def _okr_date_rfc822(s: str) -> str:
+    """'2026-11-17' / '2026-11' / '2026' → '17 Nov 2026 08:00:00 GMT'。"""
+    m = OKR_DATE_RE.match((s or "").strip())
+    if not m:
+        return ""
+    y, mo, d = m.group(1), m.group(2) or "1", m.group(3) or "1"
+    if not (1 <= int(mo) <= 12):
+        return ""
+    return _rfc822(y, mo, d)
+
+
+def _okr_via_oai(limit: int = 30):
+    """REST API 不可用时的兜底：OAI-PMH。"""
+    from xml.etree import ElementTree as ET
+
+    start = (datetime.now(timezone.utc) - timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
+    try:
+        r = requests.get(OKR_OAI,
+                         params={"verb": "ListRecords", "metadataPrefix": "oai_dc", "from": start},
+                         headers={"User-Agent": UA}, timeout=45)
+        if r.status_code != 200:
+            print(f"   ❌ OAI 返回 HTTP {r.status_code}")
+            return []
+        root = ET.fromstring(r.content)
+    except Exception as e:
+        print(f"   ❌ OAI 请求失败：{type(e).__name__}")
+        return []
+
+    ns = {"oai": "http://www.openarchives.org/OAI/2.0/",
+          "oai_dc": "http://www.openarchives.org/OAI/2.0/oai_dc/",
+          "dc": "http://purl.org/dc/elements/1.1/"}
+    items, seen = [], set()
+    for rec in root.findall(".//oai:record", ns):
+        dc = rec.find(".//oai_dc:dc", ns)
+        if dc is None:
+            continue
+        title = (dc.findtext("dc:title", default="", namespaces=ns) or "").strip()
+        date = (dc.findtext("dc:date", default="", namespaces=ns) or "").strip()
+        desc = (dc.findtext("dc:description", default="", namespaces=ns) or "").strip()
+        link = ""
+        for ident in dc.findall("dc:identifier", ns):
+            t = (ident.text or "").strip()
+            if "handle" in t:
+                link = t
+                break
+        if not title or not link:
+            continue
+        pub = _okr_date_rfc822(date)
+        if not pub or title in seen:
+            continue
+        seen.add(title)
+        items.append({
+            "title": title,
+            "link": link,
+            "pubDate": pub,
+            "author": "World Bank",
+            "description": desc,
+            "source": "世界银行 World Bank",
+        })
+    items.sort(key=lambda x: _parse_date(x["pubDate"]) or datetime.min.replace(tzinfo=timezone.utc),
+               reverse=True)
+    return items[:limit]
+
+
+def fetch_worldbank_okr(limit: int = 30):
+    """抓世界银行研究报告库（OKR）最新发布的报告 / 工作论文。"""
+    print("▶ 抓取 世界银行知识库 OKR（研究报告库）…")
+
+    # ① REST API（首选）
+    try:
+        r = requests.get(OKR_API,
+                         params={"sort": "dc.date.issued,DESC", "size": limit},
+                         headers={"User-Agent": UA, "Accept": "application/json"},
+                         timeout=35)
+        if r.status_code == 200:
+            data = r.json()
+            objs = (data.get("_embedded", {})
+                        .get("searchResult", {})
+                        .get("_embedded", {})
+                        .get("objects", []))
+            items = []
+            for wrapper in objs:
+                obj = wrapper.get("_embedded", {}).get("indexableObject") or {}
+                md = obj.get("metadata") or {}
+
+                def val(key):
+                    arr = md.get(key) or []
+                    return (arr[0].get("value") or "").strip() if arr else ""
+
+                title = val("dc.title") or (obj.get("name") or "").strip()
+                handle = (obj.get("handle") or "").strip()
+                if not title or not handle:
+                    continue
+                if any(k in title.lower() for k in OKR_SKIP_TITLE):
+                    continue  # 国别舆情调查之类的行政性报告，无研判价值
+                pub = _okr_date_rfc822(val("dc.date.issued"))
+                if not pub:
+                    continue
+                items.append({
+                    "title": title,
+                    "link": f"https://openknowledge.worldbank.org/handle/{handle}",
+                    "pubDate": pub,
+                    "author": val("dc.contributor.author") or "World Bank",
+                    "description": val("dc.description.abstract"),
+                    "source": "世界银行 World Bank",
+                })
+            if items:
+                print(f"   ✅ REST API 取到 {len(items)} 条")
+                return items
+            print("   ⚠ REST API 返回 0 条，改用 OAI-PMH…")
+        else:
+            print(f"   ⚠ REST API 返回 HTTP {r.status_code}，改用 OAI-PMH…")
+    except Exception as e:
+        print(f"   ⚠ REST API 失败：{type(e).__name__}，改用 OAI-PMH…")
+
+    # ② OAI-PMH（兜底）
+    got = _okr_via_oai(limit)
+    print(f"   {'✅ OAI 兜底：' + str(len(got)) + ' 条' if got else '❌ OKR 两条通道均未取到'}")
+    return got
 
 
 # ────────────────────────────  IMF  ────────────────────────────
@@ -564,6 +695,7 @@ def fetch_imf_ilo_items():
     items = []
     items += fetch_unctad()
     items += fetch_worldbank()
+    items += fetch_worldbank_okr()
     items += fetch_imf()
     items += fetch_ilo()
     items = _filter_recent(items)
