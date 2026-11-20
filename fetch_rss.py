@@ -29,7 +29,8 @@ FEEDS = [
   "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100003114",
   "https://www.oxfordeconomics.com/feed/",
   "https://api.oecd.org/webcms/search/rss?siteName=oecd&interfaceLanguage=en&hiddenFacets=oecd-search-config-pillars%3Apublications&facets=oecd-languages%3Aen",
-  "https://www.scmp.com/rss/328461/feed"
+  "https://www.scmp.com/rss/328461/feed",
+  "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=100727362"
 ]
 
 
